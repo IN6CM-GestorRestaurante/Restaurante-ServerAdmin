@@ -1,0 +1,668 @@
+{
+  "info": {
+    "_postman_id": "fabd4a15-8db8-42eb-a453-03ac35c779c2",
+    "name": "Proyecto Restaurante",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52435973",
+    "_collection_link": "https://go.postman.co/collection/52435973-fabd4a15-8db8-42eb-a453-03ac35c779c2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Registrar Usuario Admin",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Kenneth\",\r\n  \"surname\": \"Solórzano\",\r\n  \"username\": \"ksolorzano\",\r\n  \"email\": \"admin@kinal.edu.gt\",\r\n  \"password\": \"adminPassword123\",\r\n  \"phone\": \"12345678\",\r\n  \"role\": \"ADMIN_ROLE\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar Usuario Cliente",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Cliente\",\r\n  \"surname\": \"Prueba\",\r\n  \"username\": \"cprueba\",\r\n  \"email\": \"cliente@gmail.com\",\r\n  \"password\": \"clientPassword123\",\r\n  \"phone\": \"87654321\",\r\n  \"role\": \"CLIENT_ROLE\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login (Copiar Token)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"admin@kinal.edu.gt\",\r\n  \"password\": \"adminPassword123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Restaurante",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Restaurante Kinal Center\",\r\n  \"descripcion\": \"Especialidad en comida gourmet y café de altura para desarrolladores.\",\r\n  \"address\": \"Zona 1, Ciudad de Guatemala\",\r\n  \"phoneNumber\": \"22001100\",\r\n  \"email\": \"contacto@kinalcenter.com\",\r\n  \"openingTime\": \"07:00\",\r\n  \"closingTime\": \"21:00\",\r\n  \"category\": \"Italiana\",\r\n  \"averagePrice\": 75.00\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/restaurants",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "restaurants"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Restaurantes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/restaurants?isActive=true",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "restaurants"
+          ],
+          "query": [
+            {
+              "key": "isActive",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Mesa",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"restaurant\": \"6993284f4f7cb243c8a3f663\",\r\n  \"number\": \"M-15\",\r\n  \"capacity\": 4,\r\n  \"location\": \"Terraza\",\r\n  \"status\": \"Disponible\",\r\n  \"description\": \"Mesa con vista al jardín y sombrilla.\",\r\n  \"availabilitySchedules\": [\r\n    {\r\n      \"day\": \"Sábado\",\r\n      \"startTime\": \"08:00\",\r\n      \"endTime\": \"22:00\"\r\n    },\r\n    {\r\n      \"day\": \"Domingo\",\r\n      \"startTime\": \"08:00\",\r\n      \"endTime\": \"20:00\"\r\n    }\r\n  ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/tables",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "tables"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Listar mesas por restaurante",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/tables?restaurant=_id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "tables"
+          ],
+          "query": [
+            {
+              "key": "restaurant",
+              "value": "_id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Menús",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"restaurant\": \"6993284f4f7cb243c8a3f663\",\r\n  \"name\": \"Lasagna Bolognese Especial\",\r\n  \"description\": \"Capas de pasta artesanal con salsa de carne, bechamel y queso fundido.\",\r\n  \"ingredients\": [\r\n    \"Pasta\",\r\n    \"Carne de res\",\r\n    \"Salsa de tomate\",\r\n    \"Queso mozzarella\",\r\n    \"Albahaca\"\r\n  ],\r\n  \"price\": 85.50,\r\n  \"category\": \"Plato Fuerte\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/menus",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "menus"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Menú",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/menus?restaurant=_id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "menus"
+          ],
+          "query": [
+            {
+              "key": "restaurant",
+              "value": "_id"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reservacion Mesa",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"user\": \"USER_ID\",\r\n  \"restaurant\": \"RESTAURANT_ID\",\r\n  \"type\": \"En Mesa\",\r\n  \"table\": \"TABLE_ID\",\r\n  \"date\": \"2026-03-15T19:30:00.000Z\",\r\n  \"items\": [\r\n    {\r\n      \"menuItem\": \"PLATO_ID\",\r\n      \"quantity\": 2\r\n    }\r\n  ],\r\n  \"notes\": \"Mesa cerca de la ventana, por favor.\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/reservations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reservacion A domicilio",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"user\": \"\",\r\n  \"restaurant\": \"\",\r\n  \"type\": \"A domicilio\",\r\n  \"date\": \"2026-03-21T19:00:00.000Z\",\r\n  \"deliveryAddress\": \"Calle Real 12-34, Zona 10\",\r\n  \"items\": [\r\n    {\r\n      \"menuItem\": \"\",\r\n      \"quantity\": 1\r\n    }\r\n  ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "ttp://localhost:3001/restaurant/v1/reservations",
+          "protocol": "ttp",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ver Reservaciones de un Usuario",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/reservations?user=",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "reservations"
+          ],
+          "query": [
+            {
+              "key": "user",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Usuarios",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/getUsers",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "getUsers"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Editar Restaurantes",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Kinal Gourmet Center\",\r\n  \"openingTime\": \"08:00\",\r\n  \"closingTime\": \"22:00\",\r\n  \"averagePrice\": 120.00\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/restaurants/:id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "restaurants",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Activar Restaurante",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/restaurants/:id/activate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "restaurants",
+            ":id",
+            "activate"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Desactivar Restaurante",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/restaurants/:id/desactivate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "restaurants",
+            ":id",
+            "desactivate"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Editar Mesa",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"capacity\": 6,\r\n  \"location\": \"VIP\",\r\n  \"status\": \"Mantenimiento\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/tables/:id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "tables",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Activar Mesa",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/tables/:id/activate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "tables",
+            ":id",
+            "activate"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Desactivar Mesa",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/tables/:id/desactivate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "tables",
+            ":id",
+            "desactivate"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Editar Reservacion",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"status\": \"Confirmada\",\r\n  \"notes\": \"El cliente solicitó una silla para bebé adicional.\",\r\n  \"type\": \"En Mesa\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/reservations/:id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "reservations",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Activar Reservacion",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/reservations/:id/activate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "reservations",
+            ":id",
+            "activate"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Desactivar Reservacion",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/restaurant/v1/reservations/:id/desactivate",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3001",
+          "path": [
+            "restaurant",
+            "v1",
+            "reservations",
+            ":id",
+            "desactivate"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
