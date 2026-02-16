@@ -12,6 +12,7 @@ import restaurantsRoutes from '../src/restaurants/restaurant.routes.js';
 import tablesRoutes from '../src/tables/table.routes.js';
 import menusRoutes from '../src/menus/menu.routes.js';
 import reservationsRoutes from '../src/reservations/reservation.routes.js';
+import authRoutes from '../src/users/user.routes.js'
 
 const BASE_URL = '/restaurant/v1';
 
@@ -32,6 +33,7 @@ const routes = (app) => {
     app.use(`${BASE_URL}/tables`, tablesRoutes);
     app.use(`${BASE_URL}/menus`, menusRoutes);
     app.use(`${BASE_URL}/reservations`, reservationsRoutes);
+    app.use(`${BASE_URL}/auth`, authRoutes);
 }
 
 //FUNCIÓN PARA INICIAR EL SERVIDOR
