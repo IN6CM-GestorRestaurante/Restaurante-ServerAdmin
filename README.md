@@ -1,73 +1,99 @@
-# 🍽️ Proyecto Restaurante API
+# Proyecto Restaurante
 
-Bienvenido a la API del Proyecto Restaurante. Este servicio gestiona el menú, la toma de pedidos y la administración de usuarios para el sistema del restaurante.
+Esta documentación detalla la estructura, configuración y endpoints implementados hasta la fecha en el servidor administrativo (`server-admin`). El sistema está construido sobre **Node.js** con **Express** y **MongoDB**.
 
-## 🚀 Comenzando
 
-Estas instrucciones te permitirán obtener una copia del proyecto en funcionamiento en tu máquina local para propósitos de desarrollo y pruebas.
+## Configuración General
 
-### 📋 Pre-requisitos
+* **Base URL:** `/restaurant/v1`
+* **Seguridad:** Implementación de Helmet para cabeceras HTTP seguras y validación de tokens JWT para rutas protegidas.
 
-*   **Node.js** v14+ (o Python 3.8+ / PHP 8.0+ según tu caso)
-*   **Base de Datos**: MySQL / MongoDB / PostgreSQL
-*   **Gestor de Paquetes**: npm / pip / composer
+---
 
-### 🔧 Instalación
+## Módulos del Sistema
 
-1.  **Clonar el repositorio:**
-    ```bash
-    git clone https://github.com/gc130041/proyecto-restaurante.git
-    cd proyecto-restaurante
-    ```
+### 1. Gestión de Usuarios (Users)
 
-2.  **Instalar dependencias:**
-    ```bash
-    # Si es Node.js:
-    npm install
-    
-    # Si es Python:
-    pip install -r requirements.txt
-    ```
+Este módulo maneja la autenticación y administración de usuarios del sistema.
 
-3.  **Configurar Variables de Entorno (.env):**
-    Crea un archivo `.env` en la raíz y configura tus credenciales:
-    ```env
-    PORT=3000
-    DB_URI=mongodb://localhost:27017/restaurante_db  # O tu conexión SQL
-    JWT_SECRET=tu_secreto_super_seguro
-    ```
+* **Controlador:** `src/users/user.controller.js`
+* **Rutas:** `src/users/user.routes.js`
 
-4.  **Ejecutar el Servidor:**
-    ```bash
-    # Desarrollo
-    npm run dev  # o python app.py
-    ```
+| Método | Ruta | Función | Descripción |
+| --- | --- | --- | --- |
+| **POST** | `/register` | `register` | Registra un nuevo usuario (Cliente o Admin) con contraseña encriptada. |
+| **POST** | `/login` | `login` | Autentica al usuario y retorna un token JWT válido. |
+| **GET** | `/` | `getUsers` | Obtiene un listado paginado de los usuarios activos. |
+| **GET** | `/profile` | `getProfile` | Retorna la información del perfil del usuario autenticado (requiere token). |
 
-## 📖 Documentación de API (Endpoints)
+### 2. Gestión de Restaurantes (Restaurants)
 
-La API corre por defecto en `http://localhost:3000/api`.
+Permite la creación y administración de los establecimientos.
 
-### 🍔 Menú (Productos)
+* **Controlador:** `src/restaurants/restaurant.controller.js`
+* **Rutas:** `src/restaurants/restaurant.routes.js`
 
-| Método | Endpoint       | Descripción                        | Auth Requerida |
-| :---   | :---           | :---                               | :---: |
-| `GET`  | `/menu`        | Obtener todos los platillos        | ❌ |
-| `GET`  | `/menu/:id`    | Obtener detalle de un platillo     | ❌ |
-| `POST` | `/menu`        | Crear un nuevo platillo (Admin)    | ✅ |
-| `PUT`  | `/menu/:id`    | Actualizar platillo (Admin)        | ✅ |
-| `DELETE`| `/menu/:id`   | Eliminar platillo (Admin)          | ✅ |
+| Método | Ruta | Función | Descripción |
+| --- | --- | --- | --- |
+| **GET** | `/` | `getRestaurants` | Lista los restaurantes, permitiendo filtrar por estado activo. |
+| **GET** | `/:id` | `getRestaurantById` | Busca un restaurante específico por su ID. |
+| **POST** | `/` | `createRestaurant` | Crea un restaurante, permitiendo la carga de imágenes. |
+| **PUT** | `/:id` | `updateRestaurant` | Actualiza los datos de un restaurante existente. |
+| **PUT** | `/:id/activate` | `changeRestaurantStatus` | Cambia el estado del restaurante a activo. |
+| **PUT** | `/:id/desactivate` | `changeRestaurantStatus` | Cambia el estado del restaurante a inactivo (baja lógica). |
 
-### 🛒 Pedidos (Orders)
+### 3. Gestión de Menús (Menus)
 
-| Método | Endpoint       | Descripción                        | Auth Requerida |
-| :---   | :---           | :---                               | :---: |
-| `POST` | `/orders`      | Crear un nuevo pedido              | ✅ |
-| `GET`  | `/orders`      | Ver historial de pedidos (Usuario) | ✅ |
-| `GET`  | `/orders/all`  | Ver todos los pedidos (Admin)      | ✅ |
+Administra los platos y bebidas disponibles en los restaurantes.
 
-### 👤 Usuarios & Auth
+* **Controlador:** `src/menus/menu.controller.js`
+* **Rutas:** `src/menus/menu.routes.js`
 
-| Método | Endpoint       | Descripción                        |
-| :---   | :---           | :---                               |
-| `POST` | `/auth/login`  | Iniciar sesión (Retorna Token)     |
-| `POST` | `/auth/register`| Registrar nuevo usuario           |
+| Método | Ruta | Función | Descripción |
+| --- | --- | --- | --- |
+| **GET** | `/` | `getMenus` | Lista los platos del menú, con filtros por restaurante o categoría. |
+| **GET** | `/:id` | `getMenuById` | Obtiene el detalle de un plato específico. |
+| **POST** | `/` | `createMenu` | Registra un nuevo plato en el menú. |
+| **PUT** | `/:id` | `updateMenu` | Modifica la información de un plato. |
+| **PUT** | `/:id/activate` | `changeMenuStatus` | Activa la disponibilidad del plato. |
+| **PUT** | `/:id/desactivate` | `changeMenuStatus` | Desactiva la disponibilidad del plato. |
+
+### 4. Gestión de Mesas (Tables)
+
+Controla el inventario de mesas por restaurante.
+
+* **Controlador:** `src/tables/table.controller.js`
+* **Rutas:** `src/tables/table.routes.js`
+
+| Método | Ruta | Función | Descripción |
+| --- | --- | --- | --- |
+| **GET** | `/` | `getTables` | Lista las mesas, con opción de filtrar por restaurante. |
+| **GET** | `/:id` | `getTableById` | Busca una mesa por su identificador. |
+| **POST** | `/` | `createTable` | Agrega una nueva mesa al inventario. |
+| **PUT** | `/:id` | `updateTable` | Actualiza datos de la mesa (ej. capacidad). |
+| **PUT** | `/:id/activate` | `changeTableStatus` | Habilita una mesa. |
+| **PUT** | `/:id/desactivate` | `changeTableStatus` | Deshabilita una mesa. |
+
+### 5. Gestión de Reservaciones (Reservations)
+
+Maneja el flujo principal de reservas y pedidos.
+
+* **Controlador:** `src/reservations/reservation.controller.js`
+* **Rutas:** `src/reservations/reservation.routes.js`
+
+| Método | Ruta | Función | Descripción |
+| --- | --- | --- | --- |
+| **GET** | `/` | `getReservations` | Consulta reservaciones con filtros (usuario, restaurante, fecha). |
+| **GET** | `/:id` | `getReservationById` | Obtiene el detalle completo de una reservación. |
+| **POST** | `/` | `createReservation` | Crea una nueva reservación (En mesa, Para llevar, Domicilio). |
+| **PUT** | `/:id` | `updateReservation` | Actualiza datos de la reservación (ej. estado, notas). |
+| **PUT** | `/:id/activate` | `changeReservationStatus` | Reactiva una reservación. |
+| **PUT** | `/:id/desactivate` | `changeReservationStatus` | Cancela o desactiva una reservación. |
+
+## Validaciones y Middlewares
+
+El proyecto cuenta con validaciones robustas para asegurar la integridad de datos:
+
+* **Validadores por Entidad:** Se utilizan archivos específicos (`users-validators.js`, `restaurants-validators.js`, etc.) que implementan `express-validator`.
+* **Manejo de Archivos:** Middleware `file-uploader.js` para gestionar la carga de imágenes en restaurantes y menús.
+* **Check Validators:** Middleware centralizado para recolectar y responder errores de validación.
