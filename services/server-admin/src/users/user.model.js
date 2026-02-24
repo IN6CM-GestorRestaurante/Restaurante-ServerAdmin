@@ -17,14 +17,9 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     email: {
-        type: String,
+        type: String, // Usaremos el email como puente entre Postgres y Mongo
         required: [true, 'El correo es obligatorio'],
         unique: true
-    },
-    password: {
-        type: String,
-        required: [true, 'La contraseña es obligatoria'],
-        minLength: [6, 'La contraseña debe tener al menos 6 caracteres']
     },
     phone: {
         type: String,
@@ -35,7 +30,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['ADMIN_ROLE', 'CLIENT_ROLE'],
+        enum: ['ADMIN_ROLE', 'CLIENT_ROLE', 'WAITER'], // Añadido WAITER de .NET
         default: 'CLIENT_ROLE'
     },
     status: {
@@ -49,7 +44,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.methods.toJSON = function() {
-    const { __v, password, _id, ...user } = this.toObject();
+    const { __v, _id, ...user } = this.toObject();
     user.uid = _id;
     return user;
 }
