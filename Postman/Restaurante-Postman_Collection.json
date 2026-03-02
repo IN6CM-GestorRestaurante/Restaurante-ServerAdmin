@@ -1,668 +1,1064 @@
 {
   "info": {
-    "_postman_id": "fabd4a15-8db8-42eb-a453-03ac35c779c2",
+    "_postman_id": "9ac765b6-8f83-4b06-903a-3fca5dc4ab8b",
     "name": "Proyecto Restaurante",
+    "description": "Colección para proyecto-restaurante (referencia: rama dev).\n\nServicios:\n- server-admin (Express + Mongo): {{server_admin_base_url}}\n- auth-service (ASP.NET + Postgres + JWT): {{auth_service_base_url}}\n\nFlujo recomendado:\n1) Registrar (Auth)\n2) Login (Auth) -> guarda token en {{token}}\n3) Consumir endpoints protegidos en server-admin (users, orders)\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "52435973",
-    "_collection_link": "https://go.postman.co/collection/52435973-fabd4a15-8db8-42eb-a453-03ac35c779c2?source=collection_link"
+    "_exporter_id": "48421810",
+    "_collection_link": "https://go.postman.co/collection/48421810-9ac765b6-8f83-4b06-903a-3fca5dc4ab8b?source=collection_link"
   },
   "item": [
     {
-      "name": "Registrar Usuario Admin",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"name\": \"Kenneth\",\r\n  \"surname\": \"Solórzano\",\r\n  \"username\": \"ksolorzano\",\r\n  \"email\": \"admin@kinal.edu.gt\",\r\n  \"password\": \"adminPassword123\",\r\n  \"phone\": \"12345678\",\r\n  \"role\": \"ADMIN_ROLE\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+      "name": "Auth Service (.NET) - api/Auth",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"correoejemplo@mail.com\",\n  \"password\": \"test123!\",\n  \"role\": \"{{role}}\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_base_url}}/api/Auth/register",
+              "host": [
+                "{{auth_service_base_url}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "register"
+              ]
             }
-          }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/auth/register",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "auth",
-            "register"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Registrar Usuario Cliente",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"name\": \"Cliente\",\r\n  \"surname\": \"Prueba\",\r\n  \"username\": \"cprueba\",\r\n  \"email\": \"cliente@gmail.com\",\r\n  \"password\": \"clientPassword123\",\r\n  \"phone\": \"87654321\",\r\n  \"role\": \"CLIENT_ROLE\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+        {
+          "name": "Iniciar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "let data = {};",
+                  "try { data = pm.response.json(); } catch (e) {}",
+                  "const token = data?.token;",
+                  "pm.test('Token recibido', function () {",
+                  "  pm.expect(token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "if (token) pm.collectionVariables.set('token', token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"correoejemplo@mail.com\",\n  \"password\": \"test123!\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_service_base_url}}/api/Auth/login",
+              "host": [
+                "{{auth_service_base_url}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/auth/register",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "auth",
-            "register"
-          ]
+        {
+          "name": "Abrir Swagger",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_service_base_url}}/swagger",
+              "host": [
+                "{{auth_service_base_url}}"
+              ],
+              "path": [
+                "swagger"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "Login (Copiar Token)",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"email\": \"admin@kinal.edu.gt\",\r\n  \"password\": \"adminPassword123\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+      "name": "Server Admin (Express) - /restaurant/v1",
+      "item": [
+        {
+          "name": "Salud",
+          "item": [
+            {
+              "name": "Verificar salud",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/health",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "response": []
             }
-          }
+          ]
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/auth/login",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "auth",
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Crear Restaurante",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"name\": \"Restaurante Kinal Center\",\r\n  \"descripcion\": \"Especialidad en comida gourmet y café de altura para desarrolladores.\",\r\n  \"address\": \"Zona 1, Ciudad de Guatemala\",\r\n  \"phoneNumber\": \"22001100\",\r\n  \"email\": \"contacto@kinalcenter.com\",\r\n  \"openingTime\": \"07:00\",\r\n  \"closingTime\": \"21:00\",\r\n  \"category\": \"Italiana\",\r\n  \"averagePrice\": 75.00\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+        {
+          "name": "Usuarios",
+          "item": [
+            {
+              "name": "Sincronizar usuario (interno)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"role\": \"{{role}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/users/sync",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "sync"
+                  ]
+                },
+                "description": "Normalmente lo llama auth-service al registrar usuario. Se deja para pruebas."
+              },
+              "response": []
+            },
+            {
+              "name": "Listar usuarios (protegido)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/users?limit=10&from=0",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "from",
+                      "value": "0"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Ver perfil (protegido)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/users/profile",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "profile"
+                  ]
+                }
+              },
+              "response": []
             }
-          }
+          ]
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/restaurants",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "restaurants"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Listar Restaurantes",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/restaurants?isActive=true",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "restaurants"
-          ],
-          "query": [
+        {
+          "name": "Órdenes",
+          "item": [
             {
-              "key": "isActive",
-              "value": "true"
+              "name": "Crear orden (protegido)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"table\": \"{{table_id}}\",\n  \"restaurant\": \"{{restaurant_id}}\",\n  \"items\": [\n    {\n      \"menuItem\": \"{{menu_id}}\",\n      \"quantity\": 1,\n      \"modifiers\": [],\n      \"status\": \"EN_ESPERA\",\n      \"notes\": \"Sin cebolla\",\n      \"price\": 25.5\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/orders",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cambiar estado de ítem (protegido)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"EN_COCINA\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/orders/{{order_id}}/item/{{order_item_id}}/status",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "item",
+                    "{{order_item_id}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cambiar estado de orden (protegido)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"CERRADA\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/orders/{{order_id}}/status",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Crear Mesa",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"restaurant\": \"6993284f4f7cb243c8a3f663\",\r\n  \"number\": \"M-15\",\r\n  \"capacity\": 4,\r\n  \"location\": \"Terraza\",\r\n  \"status\": \"Disponible\",\r\n  \"description\": \"Mesa con vista al jardín y sombrilla.\",\r\n  \"availabilitySchedules\": [\r\n    {\r\n      \"day\": \"Sábado\",\r\n      \"startTime\": \"08:00\",\r\n      \"endTime\": \"22:00\"\r\n    },\r\n    {\r\n      \"day\": \"Domingo\",\r\n      \"startTime\": \"08:00\",\r\n      \"endTime\": \"20:00\"\r\n    }\r\n  ]\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/tables",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "tables"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Listar mesas por restaurante",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/tables?restaurant=_id",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "tables"
-          ],
-          "query": [
+        {
+          "name": "Restaurantes",
+          "item": [
             {
-              "key": "restaurant",
-              "value": "_id"
+              "name": "Listar restaurantes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/restaurants?isActive=true",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "restaurants"
+                  ],
+                  "query": [
+                    {
+                      "key": "isActive",
+                      "value": "true"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener restaurante",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/restaurants/{{restaurant_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "restaurants",
+                    "{{restaurant_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Crear restaurante",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Restaurante {{$timestamp}}\",\n  \"descripcion\": \"Descripción de prueba\",\n  \"address\": \"Dirección\",\n  \"openingTime\": \"08:00\",\n  \"closingTime\": \"22:00\",\n  \"category\": \"Casera\",\n  \"averagePrice\": 50,\n  \"email\": \"rest{{$timestamp}}@mail.com\",\n  \"phoneNumber\": \"+50255554444\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/restaurants",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "restaurants"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar restaurante",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"averagePrice\": 60\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/restaurants/{{restaurant_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "restaurants",
+                    "{{restaurant_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar restaurante",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/restaurants/{{restaurant_id}}/activate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "restaurants",
+                    "{{restaurant_id}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar restaurante",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/restaurants/{{restaurant_id}}/desactivate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "restaurants",
+                    "{{restaurant_id}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Menús",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"restaurant\": \"6993284f4f7cb243c8a3f663\",\r\n  \"name\": \"Lasagna Bolognese Especial\",\r\n  \"description\": \"Capas de pasta artesanal con salsa de carne, bechamel y queso fundido.\",\r\n  \"ingredients\": [\r\n    \"Pasta\",\r\n    \"Carne de res\",\r\n    \"Salsa de tomate\",\r\n    \"Queso mozzarella\",\r\n    \"Albahaca\"\r\n  ],\r\n  \"price\": 85.50,\r\n  \"category\": \"Plato Fuerte\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/menus",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "menus"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Listar Menú",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/menus?restaurant=_id",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "menus"
-          ],
-          "query": [
+        {
+          "name": "Mesas",
+          "item": [
             {
-              "key": "restaurant",
-              "value": "_id"
+              "name": "Listar mesas",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/tables?isActive=true&status=Disponible&restaurant={{restaurant_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "tables"
+                  ],
+                  "query": [
+                    {
+                      "key": "isActive",
+                      "value": "true"
+                    },
+                    {
+                      "key": "status",
+                      "value": "Disponible"
+                    },
+                    {
+                      "key": "restaurant",
+                      "value": "{{restaurant_id}}"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener mesa",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/tables/{{table_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{table_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Crear mesa",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"restaurant\": \"{{restaurant_id}}\",\n  \"number\": \"M-{{$timestamp}}\",\n  \"capacity\": 4,\n  \"location\": \"Sala Principal\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/tables",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "tables"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar mesa",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Mantenimiento\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/tables/{{table_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{table_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar mesa",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/tables/{{table_id}}/activate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{table_id}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar mesa",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/tables/{{table_id}}/desactivate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{table_id}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Reservacion Mesa",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"user\": \"USER_ID\",\r\n  \"restaurant\": \"RESTAURANT_ID\",\r\n  \"type\": \"En Mesa\",\r\n  \"table\": \"TABLE_ID\",\r\n  \"date\": \"2026-03-15T19:30:00.000Z\",\r\n  \"items\": [\r\n    {\r\n      \"menuItem\": \"PLATO_ID\",\r\n      \"quantity\": 2\r\n    }\r\n  ],\r\n  \"notes\": \"Mesa cerca de la ventana, por favor.\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
         },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/reservations",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "reservations"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Reservacion A domicilio",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"user\": \"\",\r\n  \"restaurant\": \"\",\r\n  \"type\": \"A domicilio\",\r\n  \"date\": \"2026-03-21T19:00:00.000Z\",\r\n  \"deliveryAddress\": \"Calle Real 12-34, Zona 10\",\r\n  \"items\": [\r\n    {\r\n      \"menuItem\": \"\",\r\n      \"quantity\": 1\r\n    }\r\n  ]\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+        {
+          "name": "Menús",
+          "item": [
+            {
+              "name": "Listar menú",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/menus?restaurant={{restaurant_id}}&category=&isActive=true",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ],
+                  "query": [
+                    {
+                      "key": "restaurant",
+                      "value": "{{restaurant_id}}"
+                    },
+                    {
+                      "key": "category",
+                      "value": ""
+                    },
+                    {
+                      "key": "isActive",
+                      "value": "true"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener plato",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/menus/{{menu_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{menu_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Crear plato",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"restaurant\": \"{{restaurant_id}}\",\n  \"name\": \"Plato {{$timestamp}}\",\n  \"description\": \"Descripción\",\n  \"ingredients\": [\"Ingrediente 1\"],\n  \"price\": 25.5,\n  \"category\": \"Plato Fuerte\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/menus",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar plato",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"price\": 30\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/menus/{{menu_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{menu_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar plato",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/menus/{{menu_id}}/activate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{menu_id}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar plato",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/menus/{{menu_id}}/desactivate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{menu_id}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
             }
-          }
+          ]
         },
-        "url": {
-          "raw": "ttp://localhost:3001/restaurant/v1/reservations",
-          "protocol": "ttp",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "reservations"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Ver Reservaciones de un Usuario",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/reservations?user=",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "reservations"
-          ],
-          "query": [
+        {
+          "name": "Reservaciones",
+          "item": [
             {
-              "key": "user",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Listar Usuarios",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/getUsers",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "getUsers"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Editar Restaurantes",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"name\": \"Kinal Gourmet Center\",\r\n  \"openingTime\": \"08:00\",\r\n  \"closingTime\": \"22:00\",\r\n  \"averagePrice\": 120.00\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/restaurants/:id",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "restaurants",
-            ":id"
-          ],
-          "variable": [
+              "name": "Listar reservaciones",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/reservations?restaurant={{restaurant_id}}&user={{user_id}}&status=&type=",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "reservations"
+                  ],
+                  "query": [
+                    {
+                      "key": "restaurant",
+                      "value": "{{restaurant_id}}"
+                    },
+                    {
+                      "key": "user",
+                      "value": "{{user_id}}"
+                    },
+                    {
+                      "key": "status",
+                      "value": ""
+                    },
+                    {
+                      "key": "type",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
             {
-              "key": "id",
-              "value": ""
+              "name": "Obtener reservación",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/reservations/{{reservation_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "{{reservation_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Crear reservación",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user\": \"{{user_id}}\",\n  \"restaurant\": \"{{restaurant_id}}\",\n  \"type\": \"En Mesa\",\n  \"table\": \"{{table_id}}\",\n  \"items\": [],\n  \"date\": \"2026-03-02T19:00:00.000Z\",\n  \"notes\": \"Reserva QA\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/reservations",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "reservations"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar reservación",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Confirmada\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_admin_base_url}}/reservations/{{reservation_id}}",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "{{reservation_id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar reservación",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/reservations/{{reservation_id}}/activate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "{{reservation_id}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar reservación",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{server_admin_base_url}}/reservations/{{reservation_id}}/desactivate",
+                  "host": [
+                    "{{server_admin_base_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "{{reservation_id}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         }
-      },
-      "response": []
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "server_admin_base_url",
+      "value": "http://localhost:3001/restaurant/v1",
+      "type": "string"
     },
     {
-      "name": "Activar Restaurante",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/restaurants/:id/activate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "restaurants",
-            ":id",
-            "activate"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "auth_service_base_url",
+      "value": "http://localhost:5058",
+      "type": "string"
     },
     {
-      "name": "Desactivar Restaurante",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/restaurants/:id/desactivate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "restaurants",
-            ":id",
-            "desactivate"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "token",
+      "value": "",
+      "type": "string"
     },
     {
-      "name": "Editar Mesa",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"capacity\": 6,\r\n  \"location\": \"VIP\",\r\n  \"status\": \"Mantenimiento\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/tables/:id",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "tables",
-            ":id"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "email",
+      "value": "user{{$timestamp}}@mail.com",
+      "type": "string"
     },
     {
-      "name": "Activar Mesa",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/tables/:id/activate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "tables",
-            ":id",
-            "activate"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "password",
+      "value": "Test1234!",
+      "type": "string"
     },
     {
-      "name": "Desactivar Mesa",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/tables/:id/desactivate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "tables",
-            ":id",
-            "desactivate"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "role",
+      "value": "WAITER",
+      "type": "string"
     },
     {
-      "name": "Editar Reservacion",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"status\": \"Confirmada\",\r\n  \"notes\": \"El cliente solicitó una silla para bebé adicional.\",\r\n  \"type\": \"En Mesa\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/reservations/:id",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "reservations",
-            ":id"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "restaurant_id",
+      "value": "",
+      "type": "string"
     },
     {
-      "name": "Activar Reservacion",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/reservations/:id/activate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "reservations",
-            ":id",
-            "activate"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "table_id",
+      "value": "",
+      "type": "string"
     },
     {
-      "name": "Desactivar Reservacion",
-      "request": {
-        "method": "PUT",
-        "header": [],
-        "url": {
-          "raw": "http://localhost:3001/restaurant/v1/reservations/:id/desactivate",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "3001",
-          "path": [
-            "restaurant",
-            "v1",
-            "reservations",
-            ":id",
-            "desactivate"
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "value": ""
-            }
-          ]
-        }
-      },
-      "response": []
+      "key": "menu_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_item_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
     }
   ]
 }
