@@ -1,7 +1,7 @@
 const corsOptions = {
     origin: true,
-    credenciales: true,
-    mehtods: "GET,POST,PUT,DELETE",
+    credentials: true,
+    methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     allowedHeaders: "Content-Type,Authorization"
 }
  
