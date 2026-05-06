@@ -16,10 +16,10 @@ export const helmetConfiguration = {
     // HSTS desactivado por simplicidad (evita depender de entornos). Activar solo si se requiere.
     hsts: false,
     // Cabeceras básicas y útiles para API
-    frameguard: { action: 'deny' },
+    frameguard: {action: 'deny'},
     noSniff: true,
     hidePoweredBy: true,
     // Compatibilidad con Swagger UI y recursos embebidos
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginResourcePolicy: {policy: 'cross-origin'},
     crossOriginEmbedderPolicy: false,
 };

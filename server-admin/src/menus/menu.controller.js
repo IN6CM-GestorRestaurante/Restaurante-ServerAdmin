@@ -5,7 +5,7 @@ import Menu from './menu.model.js';
 
 export const getMenus = async (req, res) => {
     try {
-        const { restaurant, category, isActive } = req.query;
+        const {restaurant, category, isActive} = req.query;
 
         const filter = {};
         if (isActive !== undefined) filter.isActive = isActive === 'true';
@@ -14,7 +14,7 @@ export const getMenus = async (req, res) => {
 
         const menus = await Menu.find(filter)
             .populate('restaurant', 'name')
-            .sort({ category: 1 });
+            .sort({category: 1});
 
         res.status(200).json({
             success: true,
@@ -32,21 +32,21 @@ export const getMenus = async (req, res) => {
 
 export const getMenuById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const menu = await Menu.findById(id).populate('restaurant', 'name');
 
         if (!menu) {
-            return res.status(404).json({ success: false, message: 'Plato no encontrado' });
+            return res.status(404).json({success: false, message: 'Plato no encontrado'});
         }
 
-        res.status(200).json({ success: true, data: menu });
+        res.status(200).json({success: true, data: menu});
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({success: false, error: error.message});
     }
 };
 
@@ -80,11 +80,11 @@ export const createMenu = async (req, res) => {
 
 export const updateMenu = async (req, res) => {
     try {
-        const { id } = req.params;
-        const updateData = { ...req.body };
+        const {id} = req.params;
+        const updateData = {...req.body};
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         if (req.file) {
@@ -94,10 +94,10 @@ export const updateMenu = async (req, res) => {
             updateData.image = `${relativePath}.${extension}`;
         }
 
-        const menu = await Menu.findByIdAndUpdate(id, updateData, { new: true });
+        const menu = await Menu.findByIdAndUpdate(id, updateData, {new: true});
 
         if (!menu) {
-            return res.status(404).json({ success: false, message: 'Plato no encontrado' });
+            return res.status(404).json({success: false, message: 'Plato no encontrado'});
         }
 
         res.status(200).json({
@@ -116,18 +116,18 @@ export const updateMenu = async (req, res) => {
 
 export const changeMenuStatus = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
         const isActive = req.url.includes('/activate');
         const action = isActive ? 'activado' : 'desactivado';
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
-        const menu = await Menu.findByIdAndUpdate(id, { isActive }, { new: true });
+        const menu = await Menu.findByIdAndUpdate(id, {isActive}, {new: true});
 
         if (!menu) {
-            return res.status(404).json({ success: false, message: 'Plato no encontrado' });
+            return res.status(404).json({success: false, message: 'Plato no encontrado'});
         }
 
         res.status(200).json({

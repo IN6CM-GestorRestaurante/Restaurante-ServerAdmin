@@ -1,7 +1,7 @@
 'use strict';
 
-import { body, param } from 'express-validator';
-import { checkValidators } from "./check-validators.js";
+import {body, param} from 'express-validator';
+import {checkValidators} from "./check-validators.js";
 
 export const validateCreateTable = [
     body('restaurant')
@@ -16,7 +16,7 @@ export const validateCreateTable = [
     body('capacity')
         .notEmpty()
         .withMessage('La capacidad es obligatoria')
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('La capacidad debe ser un número entero mayor a 0'),
     body('location')
         .notEmpty()
@@ -58,7 +58,7 @@ export const validateUpdateTable = [
         .trim(),
     body('capacity')
         .optional()
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('La capacidad debe ser mayor a 0'),
     body('location')
         .optional()
