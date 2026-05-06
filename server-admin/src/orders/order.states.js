@@ -9,7 +9,7 @@ const VALID_TRANSITIONS = {
     [ITEM_STATES.EN_ESPERA]: [ITEM_STATES.EN_COCINA],
     [ITEM_STATES.EN_COCINA]: [ITEM_STATES.LISTO],
     [ITEM_STATES.LISTO]: [ITEM_STATES.SERVIDO],
-    [ITEM_STATES.SERVIDO]: [] 
+    [ITEM_STATES.SERVIDO]: []
 };
 
 export const canTransitionTo = (currentStatus, nextStatus) => {

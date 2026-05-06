@@ -5,16 +5,16 @@ import Table from './table.model.js';
 
 export const getTables = async (req, res) => {
     try {
-        const { restaurant, status, isActive } = req.query;
-        
+        const {restaurant, status, isActive} = req.query;
+
         const filter = {};
         if (isActive !== undefined) filter.isActive = isActive === 'true';
         if (status) filter.status = status;
         if (restaurant) filter.restaurant = restaurant;
 
         const tables = await Table.find(filter)
-            .populate('restaurant', 'name') 
-            .sort({ number: 1 });
+            .populate('restaurant', 'name')
+            .sort({number: 1});
 
         res.status(200).json({
             success: true,
@@ -32,21 +32,21 @@ export const getTables = async (req, res) => {
 
 export const getTableById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const table = await Table.findById(id).populate('restaurant', 'name');
 
         if (!table) {
-            return res.status(404).json({ success: false, message: 'Mesa no encontrada' });
+            return res.status(404).json({success: false, message: 'Mesa no encontrada'});
         }
 
-        res.status(200).json({ success: true, data: table });
+        res.status(200).json({success: true, data: table});
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({success: false, error: error.message});
     }
 };
 
@@ -73,11 +73,11 @@ export const createTable = async (req, res) => {
 
 export const updateTable = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
         const updateData = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const table = await Table.findByIdAndUpdate(id, updateData, {
@@ -86,7 +86,7 @@ export const updateTable = async (req, res) => {
         });
 
         if (!table) {
-            return res.status(404).json({ success: false, message: 'Mesa no encontrada' });
+            return res.status(404).json({success: false, message: 'Mesa no encontrada'});
         }
 
         res.status(200).json({
@@ -105,22 +105,22 @@ export const updateTable = async (req, res) => {
 
 export const changeTableStatus = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
         const isActive = req.url.includes('/activate');
         const action = isActive ? 'activada' : 'desactivada';
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const table = await Table.findByIdAndUpdate(
             id,
-            { isActive },
-            { new: true }
+            {isActive},
+            {new: true}
         );
 
         if (!table) {
-            return res.status(404).json({ success: false, message: 'Mesa no encontrada' });
+            return res.status(404).json({success: false, message: 'Mesa no encontrada'});
         }
 
         res.status(200).json({

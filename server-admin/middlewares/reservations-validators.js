@@ -1,7 +1,7 @@
 'use strict';
 
-import { body, param } from 'express-validator';
-import { checkValidators } from "./check-validators.js";
+import {body, param} from 'express-validator';
+import {checkValidators} from "./check-validators.js";
 
 export const validateCreateReservation = [
     body('user')
@@ -45,7 +45,7 @@ export const validateCreateReservation = [
         .withMessage('ID de producto del menú no válido'),
     body('items.*.quantity')
         .if(body('items').exists())
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('La cantidad mínima por producto es 1'),
     body('status')
         .optional()

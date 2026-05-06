@@ -1,7 +1,7 @@
 'use strict';
 
-import { body, param } from 'express-validator';
-import { checkValidators } from "./check-validators.js";
+import {body, param} from 'express-validator';
+import {checkValidators} from "./check-validators.js";
 
 export const validateCreateMenu = [
     body('restaurant')
@@ -13,13 +13,13 @@ export const validateCreateMenu = [
         .trim()
         .notEmpty()
         .withMessage('El nombre del plato es obligatorio')
-        .isLength({ min: 3, max: 100 })
+        .isLength({min: 3, max: 100})
         .withMessage('El nombre debe tener entre 3 y 100 caracteres'),
     body('description')
         .trim()
         .notEmpty()
         .withMessage('La descripción es obligatoria')
-        .isLength({ min: 10, max: 500 })
+        .isLength({min: 10, max: 500})
         .withMessage('La descripción debe tener entre 10 y 500 caracteres'),
     body('ingredients')
         .notEmpty()
@@ -27,7 +27,7 @@ export const validateCreateMenu = [
     body('price')
         .notEmpty()
         .withMessage('El precio es obligatorio')
-        .isFloat({ min: 0 })
+        .isFloat({min: 0})
         .withMessage('El precio no puede ser negativo'),
     body('category')
         .notEmpty()
@@ -45,17 +45,17 @@ export const validateUpdateMenu = [
         .withMessage('No es un ID de MongoDB válido'),
     body('name')
         .optional()
-        .isLength({ min: 3, max: 100 })
+        .isLength({min: 3, max: 100})
         .withMessage('El nombre debe tener entre 3 y 100 caracteres'),
     body('description')
         .optional()
-        .isLength({ min: 10, max: 500 })
+        .isLength({min: 10, max: 500})
         .withMessage('La descripción debe tener entre 10 y 500 caracteres'),
     body('ingredients')
         .optional(),
     body('price')
         .optional()
-        .isFloat({ min: 0 })
+        .isFloat({min: 0})
         .withMessage('El precio no puede ser negativo'),
     body('category')
         .optional()

@@ -43,8 +43,8 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-userSchema.methods.toJSON = function() {
-    const { __v, _id, ...user } = this.toObject();
+userSchema.methods.toJSON = function () {
+    const {__v, _id, ...user} = this.toObject();
     user.uid = _id;
     return user;
 }

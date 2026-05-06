@@ -2,8 +2,8 @@ import User from './user.model.js';
 
 export const getUsers = async (req, res) => {
     try {
-        const { limit = 10, from = 0 } = req.query;
-        const query = { status: true };
+        const {limit = 10, from = 0} = req.query;
+        const query = {status: true};
 
         const [total, users] = await Promise.all([
             User.countDocuments(query),
@@ -12,24 +12,24 @@ export const getUsers = async (req, res) => {
                 .limit(Number(limit))
         ]);
 
-        res.status(200).json({ success: true, total, users });
+        res.status(200).json({success: true, total, users});
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al obtener usuarios', error: error.message });
+        res.status(500).json({success: false, message: 'Error al obtener usuarios', error: error.message});
     }
 };
 
 export const getProfile = async (req, res) => {
     try {
-        res.status(200).json({ success: true, user: req.user });
+        res.status(200).json({success: true, user: req.user});
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al obtener perfil' });
+        res.status(500).json({success: false, message: 'Error al obtener perfil'});
     }
 };
 
 export const syncProfile = async (req, res) => {
     try {
-        const { email, role } = req.body;
-        
+        const {email, role} = req.body;
+
         const user = new User({
             name: "Usuario",
             surname: "Nuevo",
@@ -42,9 +42,9 @@ export const syncProfile = async (req, res) => {
 
         await user.save();
 
-        res.status(201).json({ success: true, user });
+        res.status(201).json({success: true, user});
     } catch (error) {
         console.error("Error al sincronizar perfil:", error);
-        res.status(500).json({ success: false, message: 'Error al sincronizar perfil en Mongo' });
+        res.status(500).json({success: false, message: 'Error al sincronizar perfil en Mongo'});
     }
 };

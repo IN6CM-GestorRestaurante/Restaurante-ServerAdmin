@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import { getUsers, getProfile, syncProfile } from './user.controller.js'; // <-- Importa syncProfile
-import { validateJWT } from '../../middlewares/validate-jwt.js';
+import {Router} from 'express';
+import {getProfile, getUsers, syncProfile} from './user.controller.js'; // <-- Importa syncProfile
+import {validateJWT} from '../../middlewares/validate-jwt.js';
 
 const router = Router();
 

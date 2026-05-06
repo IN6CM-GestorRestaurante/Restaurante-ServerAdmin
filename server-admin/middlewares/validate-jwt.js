@@ -6,7 +6,7 @@ export const validateJWT = async (req, res, next) => {
     const token = req.header('x-token') || req.header('Authorization')?.split(' ')[1];
 
     if (!token) {
-        return res.status(401).json({ success: false, message: 'No hay token en la petición' });
+        return res.status(401).json({success: false, message: 'No hay token en la petición'});
     }
 
     try {
@@ -18,26 +18,29 @@ export const validateJWT = async (req, res, next) => {
         const userEmail = decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
 
         if (!userEmail) {
-            return res.status(401).json({ success: false, message: 'Token no válido - Faltan claims de identidad' });
+            return res.status(401).json({success: false, message: 'Token no válido - Faltan claims de identidad'});
         }
 
         // Buscamos el perfil en MongoDB usando el correo
-        const user = await User.findOne({ email: userEmail });
+        const user = await User.findOne({email: userEmail});
 
         if (!user || !user.status) {
-            return res.status(401).json({ success: false, message: 'Token no válido - Perfil de usuario inactivo o no existe en DB' });
+            return res.status(401).json({
+                success: false,
+                message: 'Token no válido - Perfil de usuario inactivo o no existe en DB'
+            });
         }
 
         // Si existe, inyectamos el usuario en la request
         req.user = user;
-        
+
         // Opcional: Inyectamos los datos directos de Postgres por si se necesitan
-        req.postgresUserId = decoded.sub; 
+        req.postgresUserId = decoded.sub;
         req.userRole = decoded.role;
 
         next();
     } catch (error) {
         console.log("Error de JWT:", error.message);
-        res.status(401).json({ success: false, message: 'Token no válido o expirado' });
+        res.status(401).json({success: false, message: 'Token no válido o expirado'});
     }
 };
