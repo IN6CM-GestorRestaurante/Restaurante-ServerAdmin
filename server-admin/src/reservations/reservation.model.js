@@ -10,8 +10,8 @@ const reservationSchema = new mongoose.Schema({
     },
     restaurant: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Restaurant',
-        required: [true, 'El restaurante es obligatorio']
+        ref: 'Branch',
+        required: [true, 'La sucursal es obligatoria']
     },
     type: {
         type: String,
