@@ -68,7 +68,7 @@ router.get('/:id', validateJWT, validateGetBranchById, getBranchById);
  *       201:
  *         description: Sucursal creada
  */
-router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), uploadBranchImage.single('photos'), validateCreateBranch, createBranch);
+router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), uploadBranchImage.single('photos'), validateCreateBranch, createBranch);
 
 /**
  * @swagger
@@ -86,10 +86,10 @@ router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), upl
  *       200:
  *         description: Sucursal actualizada
  */
-router.put('/:id', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), uploadBranchImage.single('photos'), validateUpdateBranch, updateBranch);
+router.put('/:id', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), uploadBranchImage.single('photos'), validateUpdateBranch, updateBranch);
 
 //PUT
-router.put('/:id/activate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), validateBranchStatusChange, changeBranchStatus);
-router.put('/:id/desactivate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), validateBranchStatusChange, changeBranchStatus);
+router.put('/:id/activate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), validateBranchStatusChange, changeBranchStatus);
+router.put('/:id/desactivate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), validateBranchStatusChange, changeBranchStatus);
 
 export default router;

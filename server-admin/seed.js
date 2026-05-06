@@ -30,9 +30,9 @@ const seedDatabase = async () => {
                 name: 'Admin',
                 surname: 'User',
                 username: 'admin1',
-                email: 'admin1@test.com',
+                email: 'admin@restaurante.local',
                 phone: '12345678',
-                role: 'ADMIN'
+                role: 'ADMIN_ROLE'
             },
             {
                 name: 'John',

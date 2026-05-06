@@ -23,7 +23,7 @@ const router = Router();
  *       200:
  *         description: Lista de compañías
  */
-router.get('/', validateJWT, authorizeRole('SUPER_ADMIN'), getCompanies);
+router.get('/', validateJWT, authorizeRole('SUPER_ADMIN', 'ADMIN_ROLE'), getCompanies);
 
 /**
  * @swagger
@@ -37,6 +37,6 @@ router.get('/', validateJWT, authorizeRole('SUPER_ADMIN'), getCompanies);
  *       201:
  *         description: Compañía creada
  */
-router.post('/', validateJWT, authorizeRole('SUPER_ADMIN'), createCompany);
+router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'ADMIN_ROLE'), createCompany);
 
 export default router;
