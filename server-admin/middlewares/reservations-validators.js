@@ -1,7 +1,7 @@
 'use strict';
 
-import { body, param } from 'express-validator';
-import { checkValidators } from "./check-validators.js";
+import {body, param} from 'express-validator';
+import {checkValidators} from "./check-validators.js";
 
 export const validateCreateReservation = [
     body('user')
@@ -9,11 +9,11 @@ export const validateCreateReservation = [
         .withMessage('El ID del usuario es obligatorio')
         .isMongoId()
         .withMessage('No es un ID de usuario válido'),
-    body('restaurant')
+    body('branch')
         .notEmpty()
-        .withMessage('El ID del restaurante es obligatorio')
+        .withMessage('El ID de la sucursal es obligatorio')
         .isMongoId()
-        .withMessage('No es un ID de restaurante válido'),
+        .withMessage('No es un ID de sucursal válido'),
     body('type')
         .notEmpty()
         .withMessage('El tipo de reservación es obligatorio')
@@ -45,7 +45,7 @@ export const validateCreateReservation = [
         .withMessage('ID de producto del menú no válido'),
     body('items.*.quantity')
         .if(body('items').exists())
-        .isInt({ min: 1 })
+        .isInt({min: 1})
         .withMessage('La cantidad mínima por producto es 1'),
     body('status')
         .optional()

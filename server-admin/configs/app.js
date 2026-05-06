@@ -6,16 +6,23 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { corsOptions } from './cors-configuration.js';
 import { dbConnection } from '../configs/db.js';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger.js';
+import { errorHandlerGlobal } from '../middlewares/handle-errors.js';
 
 //Rutas
-import restaurantsRoutes from '../src/restaurants/restaurant.routes.js';
 import tablesRoutes from '../src/tables/table.routes.js';
 import menusRoutes from '../src/menus/menu.routes.js';
 import reservationsRoutes from '../src/reservations/reservation.routes.js';
 import usersRoutes from '../src/users/user.routes.js'
 import orderRoutes from '../src/orders/order.routes.js';
+import branchRoutes from '../src/branchs/branch.routes.js'; 
+import companyRoutes from '../src/companies/company.routes.js'; 
+import ingredientRoutes from '../src/ingredients/ingredient.routes.js'; 
+import stockRoutes from '../src/stocks/stock.routes.js'; 
+import invoiceRoutes from '../src/invoices/invoice.routes.js';
 
-const BASE_URL = '/restaurant/v1';
+const BASE_URL = '/branch/v1';
 
 //Configuración de mi aplicación
 //Se almacena en una funcion para que pueda ser exportada 
@@ -30,24 +37,35 @@ const middlewares = (app) => {
 
 //Integracion de todas las rutas
 const routes = (app) => {
-    app.use(`${BASE_URL}/restaurants`, restaurantsRoutes);
+    app.use(`${BASE_URL}/companies`, companyRoutes);
+    app.use(`${BASE_URL}/ingredients`, ingredientRoutes);
+    app.use(`${BASE_URL}/stocks`, stockRoutes);
+    app.use(`${BASE_URL}/branches`, branchRoutes);
     app.use(`${BASE_URL}/tables`, tablesRoutes);
     app.use(`${BASE_URL}/menus`, menusRoutes);
     app.use(`${BASE_URL}/reservations`, reservationsRoutes);
     app.use(`${BASE_URL}/orders`, orderRoutes);
+    app.use(`${BASE_URL}/invoices`, invoiceRoutes);
     app.use(`${BASE_URL}/users`, usersRoutes);
 }
 
-//FUNCIÓN PARA INICIAR EL SERVIDOR
+//FUNDIC“N PARA INICIAR EL SERVIDOR
 const initServer = async (app) => {
     //Creación de la instancia de la aplicaccion
     app = express();
     const PORT = process.env.PORT || 3001
     try {
-        //CONFIGURACIONES DEL MIDDLEWARES (Mi aplicación)
+        //CONFIGURACIONES DEL MIDDLEWARES (Mi aplicacin)
         dbConnection();
         middlewares(app);
+        
+        // Swagger UI Config
+        app.use(`${BASE_URL}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+        
         routes(app);
+        
+        // Manejador Global de Errores - Siempre de último
+        app.use(errorHandlerGlobal);
 
         app.listen(PORT, () => {
             console.log(`Servidor corriendo en el puerto ${PORT}`);
@@ -59,7 +77,7 @@ const initServer = async (app) => {
             res.status(200).json(
                 {
                 status: 'ok',
-                service: 'Restaurant Admin',
+                service: 'Branch Admin',
                 version: '1.0.0'
                 }
             );

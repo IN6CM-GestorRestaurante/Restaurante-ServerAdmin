@@ -1,14 +1,6 @@
-import { Router } from 'express';
-import {
-	getUsers,
-	getProfile,
-	syncProfile,
-	createUser,
-	updateUser,
-	changeUserStatus,
-} from './user.controller.js';
-import { validateJWT } from '../../middlewares/validate-jwt.js';
-import { createUserValidator, updateUserValidator } from '../../middlewares/users-validators.js';
+import {Router} from 'express';
+import {getProfile, getUsers, syncProfile, updateUser, changeUserStatus} from './user.controller.js'; // <-- Importa syncProfile
+import {validateJWT} from '../../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -17,9 +9,9 @@ router.post('/sync', syncProfile);
 // Rutas protegidas
 router.get('/', validateJWT, getUsers);
 router.get('/profile', validateJWT, getProfile);
-router.post('/', validateJWT, createUserValidator, createUser);
-router.put('/:id', validateJWT, updateUserValidator, updateUser);
-router.put('/:id/activate', validateJWT, updateUserValidator, changeUserStatus);
-router.put('/:id/desactivate', validateJWT, updateUserValidator, changeUserStatus);
+
+router.put('/:id', validateJWT, updateUser);
+router.put('/:id/activate', validateJWT, changeUserStatus);
+router.put('/:id/desactivate', validateJWT, changeUserStatus);
 
 export default router;

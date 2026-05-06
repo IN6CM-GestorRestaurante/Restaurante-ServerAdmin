@@ -3,10 +3,10 @@
 import mongoose from 'mongoose';
 
 const tableSchema = new mongoose.Schema({
-    restaurant: {
+    branch: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Restaurant',
-        required: [true, 'La mesa debe estar vinculada a un restaurante']
+        ref: 'Branch',
+        required: [true, 'La mesa debe estar vinculada a una sucursal']
     },
     number: {
         type: String,
