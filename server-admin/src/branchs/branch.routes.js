@@ -2,21 +2,22 @@
 
 import {Router} from "express";
 import {
-    changeRestaurantStatus,
-    createRestaurant,
-    getRestaurantById,
-    getRestaurants,
-    updateRestaurant
-} from "./restaurant.controller.js";
+    changeBranchStatus,
+    createBranch,
+    getBranchById,
+    getBranches,
+    updateBranch
+} from "./branch.controller.js";
 
 import {
-    validateCreateRestaurant,
-    validateGetRestaurantById,
-    validateRestaurantStatusChange,
-    validateUpdateRestaurant
-} from "../../middlewares/restaurants-validators.js";
+    validateCreateBranch,
+    validateGetBranchById,
+    validateBranchStatusChange,
+    validateUpdateBranch
+} from "../../middlewares/branches-validators.js";
+import { validateJWT, authorizeRole } from '../../middlewares/auth.middleware.js';
 
-import {uploadRestaurantImage} from "../../middlewares/file-uploader.js";
+import {uploadBranchImage} from "../../middlewares/file-uploader.js";
 
 const router = Router();
 
@@ -37,7 +38,7 @@ const router = Router();
  *       200:
  *         description: Lista devuelta
  */
-router.get('/', getRestaurants);
+router.get('/', validateJWT, getBranches);
 
 /**
  * @swagger
@@ -55,7 +56,7 @@ router.get('/', getRestaurants);
  *       200:
  *         description: Sucursal obtenida
  */
-router.get('/:id', validateGetRestaurantById, getRestaurantById);
+router.get('/:id', validateJWT, validateGetBranchById, getBranchById);
 
 /**
  * @swagger
@@ -67,7 +68,7 @@ router.get('/:id', validateGetRestaurantById, getRestaurantById);
  *       201:
  *         description: Sucursal creada
  */
-router.post('/', uploadRestaurantImage.single('photos'), validateCreateRestaurant, createRestaurant);
+router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), uploadBranchImage.single('photos'), validateCreateBranch, createBranch);
 
 /**
  * @swagger
@@ -85,10 +86,10 @@ router.post('/', uploadRestaurantImage.single('photos'), validateCreateRestauran
  *       200:
  *         description: Sucursal actualizada
  */
-router.put('/:id', uploadRestaurantImage.single('photos'), validateUpdateRestaurant, updateRestaurant);
+router.put('/:id', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), uploadBranchImage.single('photos'), validateUpdateBranch, updateBranch);
 
 //PUT
-router.put('/:id/activate', validateRestaurantStatusChange, changeRestaurantStatus);
-router.put('/:id/desactivate', validateRestaurantStatusChange, changeRestaurantStatus);
+router.put('/:id/activate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), validateBranchStatusChange, changeBranchStatus);
+router.put('/:id/desactivate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), validateBranchStatusChange, changeBranchStatus);
 
 export default router;

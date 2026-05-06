@@ -5,16 +5,16 @@ import Reservation from './reservation.model.js';
 
 export const getReservations = async (req, res) => {
     try {
-        const {restaurant, user, status, type} = req.query;
+        const {branch, user, status, type} = req.query;
 
         const filter = {};
         if (status) filter.status = status;
         if (type) filter.type = type;
-        if (restaurant) filter.restaurant = restaurant;
+        if (branch) filter.branch = branch;
         if (user) filter.user = user;
 
         const reservations = await Reservation.find(filter)
-            .populate('restaurant', 'name')
+            .populate('branch', 'name')
             .populate('user', 'name email')
             .populate('table', 'number')
             .sort({date: 1});
@@ -42,7 +42,7 @@ export const getReservationById = async (req, res) => {
         }
 
         const reservation = await Reservation.findById(id)
-            .populate('restaurant', 'name')
+            .populate('branch', 'name')
             .populate('user', 'name')
             .populate('table', 'number');
 

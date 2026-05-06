@@ -1,9 +1,9 @@
 'use strict';
 
 import mongoose from 'mongoose';
-import Restaurant from './restaurant.model.js';
+import Branch from './branch.model.js';
 
-export const getRestaurants = async (req, res) => {
+export const getBranches = async (req, res) => {
     try {
         const {isActive} = req.query;
 
@@ -12,24 +12,24 @@ export const getRestaurants = async (req, res) => {
             filter.isActive = isActive === 'true';
         }
 
-        const restaurants = await Restaurant.find(filter)
+        const branches = await Branch.find(filter)
             .sort({createdAt: -1});
 
         res.status(200).json({
             success: true,
-            total: restaurants.length,
-            data: restaurants
+            total: branches.length,
+            data: branches
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error al obtener los restaurantes',
+            message: 'Error al obtener las sucursales',
             error: error.message
         });
     }
 };
 
-export const getRestaurantById = async (req, res) => {
+export const getBranchById = async (req, res) => {
     try {
         const {id} = req.params;
 
@@ -40,31 +40,31 @@ export const getRestaurantById = async (req, res) => {
             });
         }
 
-        const restaurant = await Restaurant.findById(id);
+        const branch = await Branch.findById(id);
 
-        if (!restaurant) {
+        if (!branch) {
             return res.status(404).json({
                 success: false,
-                message: 'Restaurante no encontrado'
+                message: 'Sucursal no encontrada'
             });
         }
 
         res.status(200).json({
             success: true,
-            data: restaurant
+            data: branch
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Error al obtener el restaurante',
+            message: 'Error al obtener la sucursal',
             error: error.message
         });
     }
 };
 
-export const createRestaurant = async (req, res) => {
+export const createBranch = async (req, res) => {
     try {
-        const restaurantData = req.body;
+        const branchData = req.body;
 
         if (req.file) {
             const extension = req.file.path.split('.').pop();
@@ -74,30 +74,30 @@ export const createRestaurant = async (req, res) => {
                 fileName.indexOf('photos/')
             );
 
-            restaurantData.photos = [`${relativePath}.${extension}`];
+            branchData.photos = [`${relativePath}.${extension}`];
         } else {
-            restaurantData.photos = ['photos/default_photos_logo'];
+            branchData.photos = ['photos/default_photos_logo'];
         }
 
-        const restaurant = new Restaurant(restaurantData);
-        await restaurant.save();
+        const branch = new Branch(branchData);
+        await branch.save();
 
         res.status(201).json({
             succes: true,
-            message: 'Restaurante creado exitosamente',
-            data: restaurant
+            message: 'Sucursal creada exitosamente',
+            data: branch
         });
 
     } catch (error) {
         res.status(500).json({
             succes: false,
-            message: 'Error al crear el restaurante',
+            message: 'Error al crear la sucursal',
             error: error.message
         });
     }
 };
 
-export const updateRestaurant = async (req, res) => {
+export const updateBranch = async (req, res) => {
     try {
         const {id} = req.params;
         const updateData = {...req.body};
@@ -113,56 +113,56 @@ export const updateRestaurant = async (req, res) => {
             updateData.photos = [`${relativePath}.${extension}`];
         }
 
-        const restaurant = await Restaurant.findByIdAndUpdate(id, updateData, {
+        const branch = await Branch.findByIdAndUpdate(id, updateData, {
             new: true,
             runValidators: true
         });
 
-        if (!restaurant) {
+        if (!branch) {
             return res.status(404).json({
                 success: false,
-                message: 'Restaurante no encontrado'
+                message: 'Sucursal no encontrada'
             });
         }
 
         res.status(200).json({
             success: true,
-            message: 'Restaurante actualizado exitosamente',
-            data: restaurant
+            message: 'Sucursal actualizada exitosamente',
+            data: branch
         });
     } catch (error) {
         res.status(400).json({
             success: false,
-            message: 'Error al actualizar el restaurante',
+            message: 'Error al actualizar la sucursal',
             error: error.message
         });
     }
 };
 
-export const changeRestaurantStatus = async (req, res) => {
+export const changeBranchStatus = async (req, res) => {
     try {
         const {id} = req.params;
         const isActive = req.url.includes('/activate');
-        const action = isActive ? 'activado' : 'desactivado';
+        const action = isActive ? 'activada' : 'desactivada';
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
-        const restaurant = await Restaurant.findByIdAndUpdate(
+        const branch = await Branch.findByIdAndUpdate(
             id,
             {isActive},
             {new: true}
         );
 
-        if (!restaurant) {
-            return res.status(404).json({success: false, message: 'Restaurante no encontrado'});
+        if (!branch) {
+            return res.status(404).json({success: false, message: 'Sucursal no encontrada'});
         }
 
         res.status(200).json({
             success: true,
-            message: `Restaurante ${action} exitosamente`,
-            data: restaurant
+            message: `Sucursal ${action} exitosamente`,
+            data: branch
         });
     } catch (error) {
         res.status(500).json({

@@ -9,11 +9,11 @@ export const validateCreateReservation = [
         .withMessage('El ID del usuario es obligatorio')
         .isMongoId()
         .withMessage('No es un ID de usuario válido'),
-    body('restaurant')
+    body('branch')
         .notEmpty()
-        .withMessage('El ID del restaurante es obligatorio')
+        .withMessage('El ID de la sucursal es obligatorio')
         .isMongoId()
-        .withMessage('No es un ID de restaurante válido'),
+        .withMessage('No es un ID de sucursal válido'),
     body('type')
         .notEmpty()
         .withMessage('El tipo de reservación es obligatorio')

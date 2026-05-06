@@ -5,15 +5,15 @@ import Menu from './menu.model.js';
 
 export const getMenus = async (req, res) => {
     try {
-        const {restaurant, category, isActive} = req.query;
+        const {branch, category, isActive} = req.query;
 
         const filter = {};
         if (isActive !== undefined) filter.isActive = isActive === 'true';
-        if (restaurant) filter.restaurant = restaurant;
+        if (branch) filter.branch = branch;
         if (category) filter.category = category;
 
         const menus = await Menu.find(filter)
-            .populate('restaurant', 'name')
+            .populate('branch', 'name')
             .sort({category: 1});
 
         res.status(200).json({
@@ -38,7 +38,7 @@ export const getMenuById = async (req, res) => {
             return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
-        const menu = await Menu.findById(id).populate('restaurant', 'name');
+        const menu = await Menu.findById(id).populate('branch', 'name');
 
         if (!menu) {
             return res.status(404).json({success: false, message: 'Plato no encontrado'});

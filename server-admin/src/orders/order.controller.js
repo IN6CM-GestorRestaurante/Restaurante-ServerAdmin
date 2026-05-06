@@ -13,29 +13,51 @@ const VALID_TRANSITIONS = {
     "cancelled": []
 };
 
+// Obtener órdenes activas de la sucursal
+export const getActiveOrdersByBranch = async (req, res, next) => {
+    try {
+        const { branchId } = req.params;
+        const orders = await Order.find({
+            branch: branchId,
+            status: { $nin: ["paid", "cancelled"] }
+        }).populate('tables').populate('waiter', 'name surname');
+        res.status(200).json({ success: true, data: orders });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const createOrder = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-        const {table, restaurant, items} = req.body;
+        const {tables, branch, items} = req.body;
         const waiter = req.usuario._id;
 
-        const tableUpdate = await Table.findOneAndUpdate(
-            {_id: table, status: "Disponible"},
-            {$set: {status: "Ocupada"}},
-            {new: true, session}
-        );
-
-        if (!tableUpdate) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({
-                success: false,
-                message: "Mesa no disponible o ya ocupada."
-            });
+        // Validar que el mesero pertenece a la sucursal si aplica (se asume que el Auth Middleware ya filtró o podemos revalidarlo si req.user.branchId existe)
+        if (req.user.role === 'WAITER' && req.user.branchId.toString() !== branch) {
+            throw new Error('No puedes crear órdenes para una sucursal en la que no trabajas.');
         }
 
-        const newOrder = new Order({table, waiter, restaurant, items});
+        // Actualizar múltiples mesas
+        const tableUpdates = await Table.updateMany(
+            {_id: { $in: tables }, status: "Disponible"},
+            {$set: {status: "Ocupada"}},
+            {session}
+        );
+
+        if (tableUpdates.modifiedCount !== tables.length) {
+            throw new Error("Una o más mesas no están disponibles.");
+        }
+
+        // Cargar precios actuales (Snapshot temporal)
+        for (const item of items) {
+            const menu = await Menu.findById(item.menuItem).session(session);
+            if (!menu) throw new Error(`El platillo ${item.menuItem} no existe.`);
+            item.priceAtTime = menu.price;
+        }
+
+        const newOrder = new Order({tables, waiter, branch, items});
         await newOrder.save({session});
 
         await session.commitTransaction();
@@ -45,7 +67,7 @@ export const createOrder = async (req, res) => {
     } catch (error) {
         await session.abortTransaction();
         session.endSession();
-        res.status(500).json({success: false, error: error.message});
+        res.status(400).json({success: false, error: error.message});
     }
 };
 
@@ -79,8 +101,8 @@ export const updateItemStatus = async (req, res) => {
             });
         }
 
-        // Si se entrega, descontar inventario
-        if (nextStatus === "delivered" && item.status !== "delivered") {
+        // Si pasa a cocina, descontar inventario
+        if (nextStatus === "in-kitchen" && item.status === "pending") {
             const menu = await Menu.findById(item.menuItem).session(session);
             if (!menu) throw new Error("Platillo no encontrado");
 
@@ -88,12 +110,12 @@ export const updateItemStatus = async (req, res) => {
                 for (const recipeItem of menu.recipe) {
                     const requiredQuantity = recipeItem.quantityRequired * item.quantity;
                     const stock = await Stock.findOne({
-                        branchId: order.restaurant,
+                        branchId: order.branch,
                         ingredientId: recipeItem.ingredientId
                     }).session(session);
 
                     if (!stock || stock.quantity < requiredQuantity) {
-                        throw new Error(`Inventario insuficiente para el ingrediente: ${recipeItem.ingredientId}`);
+                        throw new Error(`Inventario insuficiente para el ingrediente: ${recipeItem.ingredientId}.`);
                     }
 
                     stock.quantity -= requiredQuantity;
@@ -125,7 +147,7 @@ export const updateOrderStatus = async (req, res) => {
         if (!order) return res.status(404).json({success: false, message: "Orden no encontrada"});
 
         if (status === "paid" || status === "cancelled") {
-            await Table.findByIdAndUpdate(order.table, {$set: {status: "Disponible"}});
+            await Table.updateMany({_id: { $in: order.tables }}, {$set: {status: "Disponible"}});
         }
 
         res.status(200).json({success: true, message: "Estado actualizado y mesa sincronizada"});

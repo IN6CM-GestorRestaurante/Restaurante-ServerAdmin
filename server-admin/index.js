@@ -13,5 +13,5 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1);
 });
 
-console.log(`Iniciando servidor de restaurante...`);
+console.log(`Iniciando servidor de sucursales...`);
 initServer();

@@ -5,7 +5,7 @@ import {validateJWT} from "./validate-jwt.js";
 export const createOrderValidator = [
     validateJWT,
     body("table", "El ID de la mesa es obligatorio y debe ser válido").isMongoId(),
-    body("restaurant", "El ID del restaurante es obligatorio").isMongoId(),
+    body("branch", "El ID de la sucursal es obligatorio").isMongoId(),
     body("items", "Los items son obligatorios y deben ser un arreglo").isArray({min: 1}),
     body("items.*.menuItem", "El ID del platillo debe ser válido").isMongoId(),
     body("items.*.quantity", "La cantidad debe ser un número mayor a 0").isInt({min: 1}),
