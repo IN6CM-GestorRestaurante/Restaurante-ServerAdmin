@@ -5,7 +5,7 @@ import Restaurant from './restaurant.model.js';
 
 export const getRestaurants = async (req, res) => {
     try {
-        const { isActive } = req.query;
+        const {isActive} = req.query;
 
         const filter = {};
         if (isActive !== undefined) {
@@ -13,7 +13,7 @@ export const getRestaurants = async (req, res) => {
         }
 
         const restaurants = await Restaurant.find(filter)
-            .sort({ createdAt: -1 });
+            .sort({createdAt: -1});
 
         res.status(200).json({
             success: true,
@@ -31,7 +31,7 @@ export const getRestaurants = async (req, res) => {
 
 export const getRestaurantById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
@@ -83,7 +83,7 @@ export const createRestaurant = async (req, res) => {
         await restaurant.save();
 
         res.status(201).json({
-            succes: true, 
+            succes: true,
             message: 'Restaurante creado exitosamente',
             data: restaurant
         });
@@ -99,11 +99,11 @@ export const createRestaurant = async (req, res) => {
 
 export const updateRestaurant = async (req, res) => {
     try {
-        const { id } = req.params;
-        const updateData = { ...req.body };
+        const {id} = req.params;
+        const updateData = {...req.body};
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         if (req.file) {
@@ -141,22 +141,22 @@ export const updateRestaurant = async (req, res) => {
 
 export const changeRestaurantStatus = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
         const isActive = req.url.includes('/activate');
         const action = isActive ? 'activado' : 'desactivado';
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const restaurant = await Restaurant.findByIdAndUpdate(
             id,
-            { isActive },
-            { new: true }
+            {isActive},
+            {new: true}
         );
 
         if (!restaurant) {
-            return res.status(404).json({ success: false, message: 'Restaurante no encontrado' });
+            return res.status(404).json({success: false, message: 'Restaurante no encontrado'});
         }
 
         res.status(200).json({

@@ -3,6 +3,11 @@
 import mongoose from 'mongoose';
 
 const restaurantSchema = new mongoose.Schema({
+    companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'La sucursal debe pertenecer a una empresa']
+    },
     name: {
         type: String,
         required: [true, 'El nombre del restaurante es obligatorio'],
@@ -11,7 +16,7 @@ const restaurantSchema = new mongoose.Schema({
         maxLength: [100, 'El nombre no puede exceder los 100 caracteres'],
         minLength: [3, 'El nombre debe tener al menos 3 caracteres']
     },
-    descripcion: {
+    description: {
         type: String,
         required: [true, 'La descripción es obligatoria'],
         trim: true,
@@ -24,12 +29,12 @@ const restaurantSchema = new mongoose.Schema({
         trim: true
     },
     openingTime: {
-        type: String, 
+        type: String,
         required: [true, 'La hora de apertura es obligatoria'],
         match: [/^([01]\d|2[0-3]):?([0-5]\d)$/, 'Formato de hora valido (ej: 08:00)']
     },
     closingTime: {
-        type: String, 
+        type: String,
         required: [true, 'La hora de cierre es obligatoria'],
         match: [/^([01]\d|2[0-3]):?([0-5]\d)$/, 'Formato de hora valido (ej: 10:00)']
     },
@@ -73,4 +78,4 @@ const restaurantSchema = new mongoose.Schema({
     }
 });
 
-export default mongoose.model('Restaurant', restaurantSchema);
+export default mongoose.model('Branch', restaurantSchema);
