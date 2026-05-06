@@ -64,14 +64,14 @@ const createCloudinaryUploader = (folder) => {
     });
 };
 
-// Uploader para imágenes de Equipos restaurantes / logo
-export const uploadRestaurantImage = createCloudinaryUploader(
-    process.env.CLOUDINARY_TEAMS_FOLDER || 'restaurants/restaurant'
+// Uploader para imágenes de sucursales / logo
+export const uploadBranchImage = createCloudinaryUploader(
+    process.env.CLOUDINARY_TEAMS_FOLDER || 'branches/branch'
 );
 
 // Uploader para imágenes de Menús
 export const uploadMenuImage = createCloudinaryUploader(
-    process.env.CLOUDINARY_MENUS_FOLDER || 'restaurants/menu'
+    process.env.CLOUDINARY_MENUS_FOLDER || 'branches/menu'
 );
 
 // Export cloudinary instance para usar en delete-file-on-error

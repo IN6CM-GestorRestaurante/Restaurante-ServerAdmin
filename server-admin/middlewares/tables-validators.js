@@ -4,11 +4,11 @@ import {body, param} from 'express-validator';
 import {checkValidators} from "./check-validators.js";
 
 export const validateCreateTable = [
-    body('restaurant')
+    body('branch')
         .notEmpty()
-        .withMessage('El ID del restaurante es obligatorio')
+        .withMessage('El ID de la sucursal es obligatorio')
         .isMongoId()
-        .withMessage('No es un ID de restaurante válido'),
+        .withMessage('No es un ID de sucursal válido'),
     body('number')
         .notEmpty()
         .withMessage('El número o identificador de la mesa es obligatorio')

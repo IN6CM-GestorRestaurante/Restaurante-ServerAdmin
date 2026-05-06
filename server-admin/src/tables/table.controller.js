@@ -5,15 +5,15 @@ import Table from './table.model.js';
 
 export const getTables = async (req, res) => {
     try {
-        const {restaurant, status, isActive} = req.query;
+        const {branch, status, isActive} = req.query;
 
         const filter = {};
         if (isActive !== undefined) filter.isActive = isActive === 'true';
         if (status) filter.status = status;
-        if (restaurant) filter.restaurant = restaurant;
+        if (branch) filter.branch = branch;
 
         const tables = await Table.find(filter)
-            .populate('restaurant', 'name')
+            .populate('branch', 'name')
             .sort({number: 1});
 
         res.status(200).json({
@@ -38,7 +38,7 @@ export const getTableById = async (req, res) => {
             return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
-        const table = await Table.findById(id).populate('restaurant', 'name');
+        const table = await Table.findById(id).populate('branch', 'name');
 
         if (!table) {
             return res.status(404).json({success: false, message: 'Mesa no encontrada'});

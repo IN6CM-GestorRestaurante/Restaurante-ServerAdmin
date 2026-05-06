@@ -2,7 +2,7 @@
 
 import mongoose from 'mongoose';
 
-const restaurantSchema = new mongoose.Schema({
+const branchSchema = new mongoose.Schema({
     companyId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
@@ -10,7 +10,7 @@ const restaurantSchema = new mongoose.Schema({
     },
     name: {
         type: String,
-        required: [true, 'El nombre del restaurante es obligatorio'],
+        required: [true, 'El nombre de la sucursal es obligatorio'],
         trim: true,
         unique: true,
         maxLength: [100, 'El nombre no puede exceder los 100 caracteres'],
@@ -78,4 +78,4 @@ const restaurantSchema = new mongoose.Schema({
     }
 });
 
-export default mongoose.model('Branch', restaurantSchema);
+export default mongoose.model('Branch', branchSchema);

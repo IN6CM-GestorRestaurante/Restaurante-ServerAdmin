@@ -4,12 +4,12 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'ERP Restaurant API',
+            title: 'ERP Branch API',
             version: '1.0.0',
             description: 'API para la gestión centralizada de franquicias y sucursales (ERP)',
         },
         servers: [
-            { url: 'http://localhost:3001/restaurant/v1' }
+            { url: 'http://localhost:3001/branch/v1' }
         ],
         components: {
             securitySchemes: {

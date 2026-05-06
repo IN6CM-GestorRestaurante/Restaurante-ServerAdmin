@@ -16,11 +16,13 @@ import menusRoutes from '../src/menus/menu.routes.js';
 import reservationsRoutes from '../src/reservations/reservation.routes.js';
 import usersRoutes from '../src/users/user.routes.js'
 import orderRoutes from '../src/orders/order.routes.js';
-
-// NOTA: Asumimos que la ruta de branches existe basado en requerimientos
 import branchRoutes from '../src/branchs/branch.routes.js'; 
+import companyRoutes from '../src/companies/company.routes.js'; 
+import ingredientRoutes from '../src/ingredients/ingredient.routes.js'; 
+import stockRoutes from '../src/stocks/stock.routes.js'; 
+import invoiceRoutes from '../src/invoices/invoice.routes.js';
 
-const BASE_URL = '/restaurant/v1';
+const BASE_URL = '/branch/v1';
 
 //Configuración de mi aplicación
 //Se almacena en una funcion para que pueda ser exportada 
@@ -35,15 +37,19 @@ const middlewares = (app) => {
 
 //Integracion de todas las rutas
 const routes = (app) => {
+    app.use(`${BASE_URL}/companies`, companyRoutes);
+    app.use(`${BASE_URL}/ingredients`, ingredientRoutes);
+    app.use(`${BASE_URL}/stocks`, stockRoutes);
     app.use(`${BASE_URL}/branches`, branchRoutes);
     app.use(`${BASE_URL}/tables`, tablesRoutes);
     app.use(`${BASE_URL}/menus`, menusRoutes);
     app.use(`${BASE_URL}/reservations`, reservationsRoutes);
     app.use(`${BASE_URL}/orders`, orderRoutes);
+    app.use(`${BASE_URL}/invoices`, invoiceRoutes);
     app.use(`${BASE_URL}/users`, usersRoutes);
 }
 
-//FUNCI“N PARA INICIAR EL SERVIDOR
+//FUNDIC“N PARA INICIAR EL SERVIDOR
 const initServer = async (app) => {
     //Creación de la instancia de la aplicaccion
     app = express();
@@ -71,7 +77,7 @@ const initServer = async (app) => {
             res.status(200).json(
                 {
                 status: 'ok',
-                service: 'Restaurant Admin',
+                service: 'Branch Admin',
                 version: '1.0.0'
                 }
             );

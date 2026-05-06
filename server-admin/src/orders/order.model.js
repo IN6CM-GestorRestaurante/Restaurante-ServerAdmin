@@ -2,20 +2,20 @@ import {model, Schema} from "mongoose";
 
 const OrderSchema = new Schema(
     {
-        table: {
+        tables: [{
             type: Schema.Types.ObjectId,
             ref: "Table",
-            required: [true, "La mesa es obligatoria"]
-        },
+            required: [true, "Al menos una mesa es obligatoria"]
+        }],
         waiter: {
             type: Schema.Types.ObjectId,
             ref: "User",
             required: [true, "El mesero es obligatorio"]
         },
-        restaurant: {
+        branch: {
             type: Schema.Types.ObjectId,
             ref: "Branch",
-            required: [true, "El restaurante es obligatorio"]
+            required: [true, "La sucursal es obligatoria"]
         },
         items: [
             {
@@ -42,7 +42,7 @@ const OrderSchema = new Schema(
                     type: String,
                     default: ""
                 },
-                price: {
+                priceAtTime: {
                     type: Number,
                     required: true
                 }
@@ -66,7 +66,7 @@ const OrderSchema = new Schema(
 
 OrderSchema.pre("save", function (next) {
     if (this.items && this.items.length > 0) {
-        this.total = this.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        this.total = this.items.reduce((acc, item) => acc + (item.priceAtTime * item.quantity), 0);
     } else {
         this.total = 0;
     }
