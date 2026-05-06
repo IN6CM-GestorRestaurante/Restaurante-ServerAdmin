@@ -30,8 +30,18 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['ADMIN', 'CLIENT', 'WAITER'], // Añadido WAITER de .NET
-        default: 'CLIENT'
+        enum: ['SUPER_ADMIN', 'ADMIN_ROLE', 'COMPANY_ADMIN', 'BRANCH_MANAGER', 'WAITER', 'RECEPTIONIST', 'CLIENT', 'ADMIN'],
+        default: 'WAITER'
+    },
+    companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: function() { return this.role !== 'SUPER_ADMIN' && this.role !== 'ADMIN_ROLE'; }
+    },
+    branchId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Branch',
+        required: function() { return ['BRANCH_MANAGER', 'WAITER', 'RECEPTIONIST'].includes(this.role); }
     },
     status: {
         type: Boolean,
@@ -43,8 +53,8 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-userSchema.methods.toJSON = function() {
-    const { __v, _id, ...user } = this.toObject();
+userSchema.methods.toJSON = function () {
+    const {__v, _id, ...user} = this.toObject();
     user.uid = _id;
     return user;
 }

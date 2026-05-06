@@ -1,0 +1,10 @@
+export const errorHandlerGlobal = (err, req, res, next) => {
+    console.error(`[Global Error] ${err.message}`);
+    const statusCode = err.statusCode || 500;
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    res.status(statusCode).json({
+        success: false,
+        message: err.message || 'Error interno del servidor',
+        ...(isDevelopment && { stack: err.stack })
+    });
+};

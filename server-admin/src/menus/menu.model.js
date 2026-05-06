@@ -3,10 +3,10 @@
 import mongoose from 'mongoose';
 
 const menuSchema = new mongoose.Schema({
-    restaurant: {
+    branch: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Restaurant',
-        required: [true, 'El menú debe estar vinculado a un restaurante']
+        ref: 'Branch',
+        required: [true, 'El menú debe estar vinculado a una sucursal']
     },
     name: {
         type: String,
@@ -24,6 +24,18 @@ const menuSchema = new mongoose.Schema({
         type: [String],
         required: [true, 'Debe indicar al menos un ingrediente']
     },
+    recipe: [{
+        ingredientId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Ingredient',
+            required: true
+        },
+        quantityRequired: {
+            type: Number,
+            required: true,
+            min: [0.01, 'La cantidad requerida debe ser mayor a cero']
+        }
+    }],
     price: {
         type: Number,
         required: [true, 'El precio es obligatorio'],

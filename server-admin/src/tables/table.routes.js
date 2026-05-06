@@ -1,19 +1,13 @@
 'use strict';
 
-import { Router } from "express";
-import { 
-    getTables, 
-    getTableById, 
-    createTable, 
-    updateTable, 
-    changeTableStatus 
-} from "./table.controller.js";
+import {Router} from "express";
+import {changeTableStatus, createTable, getTableById, getTables, updateTable} from "./table.controller.js";
 
-import { 
-    validateCreateTable, 
-    validateGetTableById, 
-    validateUpdateTable, 
-    validateTableStatusChange 
+import {
+    validateCreateTable,
+    validateGetTableById,
+    validateTableStatusChange,
+    validateUpdateTable
 } from "../../middlewares/tables-validators.js";
 
 const router = Router();

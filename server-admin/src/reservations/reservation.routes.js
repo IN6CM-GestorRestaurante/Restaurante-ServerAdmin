@@ -1,19 +1,19 @@
 'use strict';
 
-import { Router } from "express";
-import { 
-    getReservations, 
-    getReservationById, 
-    createReservation, 
-    updateReservation, 
-    changeReservationStatus 
+import {Router} from "express";
+import {
+    changeReservationStatus,
+    createReservation,
+    getReservationById,
+    getReservations,
+    updateReservation
 } from "./reservation.controller.js";
 
-import { 
-    validateCreateReservation, 
-    validateGetReservationById, 
-    validateUpdateReservation, 
-    validateReservationStatusChange 
+import {
+    validateCreateReservation,
+    validateGetReservationById,
+    validateReservationStatusChange,
+    validateUpdateReservation
 } from "../../middlewares/reservations-validators.js";
 
 const router = Router();

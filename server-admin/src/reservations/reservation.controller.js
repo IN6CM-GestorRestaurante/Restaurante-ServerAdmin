@@ -5,19 +5,19 @@ import Reservation from './reservation.model.js';
 
 export const getReservations = async (req, res) => {
     try {
-        const { restaurant, user, status, type } = req.query;
-        
+        const {branch, user, status, type} = req.query;
+
         const filter = {};
         if (status) filter.status = status;
         if (type) filter.type = type;
-        if (restaurant) filter.restaurant = restaurant;
+        if (branch) filter.branch = branch;
         if (user) filter.user = user;
 
         const reservations = await Reservation.find(filter)
-            .populate('restaurant', 'name')
+            .populate('branch', 'name')
             .populate('user', 'name email')
             .populate('table', 'number')
-            .sort({ date: 1 });
+            .sort({date: 1});
 
         res.status(200).json({
             success: true,
@@ -35,24 +35,24 @@ export const getReservations = async (req, res) => {
 
 export const getReservationById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const reservation = await Reservation.findById(id)
-            .populate('restaurant', 'name')
+            .populate('branch', 'name')
             .populate('user', 'name')
             .populate('table', 'number');
 
         if (!reservation) {
-            return res.status(404).json({ success: false, message: 'Reservación no encontrada' });
+            return res.status(404).json({success: false, message: 'Reservación no encontrada'});
         }
 
-        res.status(200).json({ success: true, data: reservation });
+        res.status(200).json({success: true, data: reservation});
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({success: false, error: error.message});
     }
 };
 
@@ -79,11 +79,11 @@ export const createReservation = async (req, res) => {
 
 export const updateReservation = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
         const updateData = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const reservation = await Reservation.findByIdAndUpdate(id, updateData, {
@@ -92,7 +92,7 @@ export const updateReservation = async (req, res) => {
         });
 
         if (!reservation) {
-            return res.status(404).json({ success: false, message: 'Reservación no encontrada' });
+            return res.status(404).json({success: false, message: 'Reservación no encontrada'});
         }
 
         res.status(200).json({
@@ -111,22 +111,22 @@ export const updateReservation = async (req, res) => {
 
 export const changeReservationStatus = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
         const isActive = req.url.includes('/activate');
         const action = isActive ? 'activada' : 'desactivada';
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ success: false, message: 'ID no válido' });
+            return res.status(400).json({success: false, message: 'ID no válido'});
         }
 
         const reservation = await Reservation.findByIdAndUpdate(
             id,
-            { isActive },
-            { new: true }
+            {isActive},
+            {new: true}
         );
 
         if (!reservation) {
-            return res.status(404).json({ success: false, message: 'Reservación no encontrada' });
+            return res.status(404).json({success: false, message: 'Reservación no encontrada'});
         }
 
         res.status(200).json({
