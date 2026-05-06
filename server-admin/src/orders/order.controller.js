@@ -34,8 +34,8 @@ export const createOrder = async (req, res) => {
         const {tables, branch, items} = req.body;
         const waiter = req.usuario._id;
 
-        // Validar que el mesero pertenece a la sucursal si aplica (se asume que el Auth Middleware ya filtró o podemos revalidarlo si req.user.branchId existe)
-        if (req.user.role === 'WAITER' && req.user.branchId.toString() !== branch) {
+        // Validar que el mesero pertenece a la sucursal si aplica
+        if (req.user.role === 'WAITER' && req.user.branchId && req.user.branchId.toString() !== branch) {
             throw new Error('No puedes crear órdenes para una sucursal en la que no trabajas.');
         }
 

@@ -12,13 +12,13 @@ export const validateCreateBranch = [
     body('address')
         .notEmpty().withMessage('La dirección es obligatoria'),
 
-    body('phone')
+    body('phoneNumber')
         .optional()
         .isMobilePhone().withMessage('Debe ser un número de teléfono válido'),
 
-    body('company')
-        .notEmpty().withMessage('El ID de la compañía es obligatorio')
-        .isMongoId().withMessage('Debe ser un ID válido'),
+    body('companyId')
+        .optional()
+        .isMongoId().withMessage('Debe ser un ID de compañía válido'),
 
     checkValidators
 ];
@@ -44,7 +44,7 @@ export const validateUpdateBranch = [
         .optional()
         .notEmpty().withMessage('La dirección no puede estar vacía'),
 
-    body('phone')
+    body('phoneNumber')
         .optional()
         .isMobilePhone().withMessage('Debe ser un número de teléfono válido'),
 

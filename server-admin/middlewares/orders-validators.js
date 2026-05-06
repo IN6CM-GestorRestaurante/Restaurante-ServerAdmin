@@ -1,6 +1,6 @@
 import {body} from "express-validator";
 import {checkValidators} from "./check-validators.js";
-import {validateJWT} from "./validate-jwt.js";
+import {validateJWT} from "./auth.middleware.js";
 
 export const createOrderValidator = [
     validateJWT,

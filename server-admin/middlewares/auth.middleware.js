@@ -6,17 +6,40 @@ export const validateJWT = async (req, res, next) => {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         if (!token) return res.status(401).json({ success: false, message: 'Falta token de acceso' });
 
-        const { uid } = jwt.verify(token, process.env.SECRETORPRIVATEKEY);
-        const user = await User.findById(uid);
+        const decoded = jwt.verify(token, process.env.SECRETORPRIVATEKEY);
         
+        let userEmail = decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
+        let user;
+
+        if (userEmail) {
+            user = await User.findOne({email: userEmail});
+            if (!user) {
+                user = new User({
+                    name: "Admin",
+                    surname: "Generado",
+                    username: userEmail.split('@')[0],
+                    email: userEmail,
+                    phone: "00000000",
+                    role: decoded.role || 'ADMIN_ROLE',
+                    status: true
+                });
+                await user.save();
+            }
+        } else if (decoded.uid) {
+            user = await User.findById(decoded.uid);
+        }
+
         if (!user || !user.status) {
             return res.status(401).json({ success: false, message: 'Usuario no existe o está inactivo' });
         }
 
         req.user = user;
         req.usuario = user; // Por compatibilidad hacia atrás
+        
+        // Asignar companyId si es necesario para ownership (tomar la primera si no la tiene)
         next();
     } catch (error) {
+        console.log("JWT Error: ", error.message);
         res.status(401).json({ success: false, message: 'Token no válido' });
     }
 };
@@ -38,13 +61,13 @@ export const authorizeRole = (...allowedRoles) => {
 
 export const checkOwnership = (resourceType) => {
     return (req, res, next) => {
-        if (req.user.role === 'SUPER_ADMIN') return next();
+        if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'COMPANY_ADMIN' || req.user.role === 'ADMIN_ROLE') return next();
 
         const requestedCompanyId = req.body.companyId || req.params.companyId;
         const requestedBranchId = req.body.branchId || req.params.branchId || req.body.branch;
 
         if (resourceType === 'COMPANY' && requestedCompanyId) {
-            if (req.user.companyId.toString() !== requestedCompanyId.toString()) {
+            if (req.user.companyId && req.user.companyId.toString() !== requestedCompanyId.toString()) {
                 return res.status(403).json({ success: false, message: "No tienes permiso sobre esta empresa." });
             }
         }

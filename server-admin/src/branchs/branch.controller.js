@@ -66,6 +66,24 @@ export const createBranch = async (req, res) => {
     try {
         const branchData = req.body;
 
+        // Asignar companyId si no se recibe uno
+        if (!branchData.companyId) {
+            const mongoose = (await import('mongoose')).default;
+            const Company = mongoose.model('Company');
+            let defaultCompany = await Company.findOne();
+            
+            if (!defaultCompany) {
+                // Crear una compañía por defecto para evitar bloqueos
+                defaultCompany = new Company({
+                    name: 'Empresa Principal',
+                    owner: req.user._id, // Asignar al usuario actual como propietario
+                    isActive: true
+                });
+                await defaultCompany.save();
+            }
+            branchData.companyId = defaultCompany._id;
+        }
+
         if (req.file) {
             const extension = req.file.path.split('.').pop();
             const fileName = req.file.filename;
