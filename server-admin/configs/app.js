@@ -6,14 +6,19 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { corsOptions } from './cors-configuration.js';
 import { dbConnection } from '../configs/db.js';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger.js';
+import { errorHandlerGlobal } from '../middlewares/handle-errors.js';
 
 //Rutas
-import restaurantsRoutes from '../src/restaurants/restaurant.routes.js';
 import tablesRoutes from '../src/tables/table.routes.js';
 import menusRoutes from '../src/menus/menu.routes.js';
 import reservationsRoutes from '../src/reservations/reservation.routes.js';
 import usersRoutes from '../src/users/user.routes.js'
 import orderRoutes from '../src/orders/order.routes.js';
+
+// NOTA: Asumimos que la ruta de branches existe basado en requerimientos
+import branchRoutes from '../src/branchs/branch.routes.js'; 
 
 const BASE_URL = '/restaurant/v1';
 
@@ -30,7 +35,7 @@ const middlewares = (app) => {
 
 //Integracion de todas las rutas
 const routes = (app) => {
-    app.use(`${BASE_URL}/restaurants`, restaurantsRoutes);
+    app.use(`${BASE_URL}/branches`, branchRoutes);
     app.use(`${BASE_URL}/tables`, tablesRoutes);
     app.use(`${BASE_URL}/menus`, menusRoutes);
     app.use(`${BASE_URL}/reservations`, reservationsRoutes);
@@ -38,16 +43,23 @@ const routes = (app) => {
     app.use(`${BASE_URL}/users`, usersRoutes);
 }
 
-//FUNCIÓN PARA INICIAR EL SERVIDOR
+//FUNCI“N PARA INICIAR EL SERVIDOR
 const initServer = async (app) => {
     //Creación de la instancia de la aplicaccion
     app = express();
     const PORT = process.env.PORT || 3001
     try {
-        //CONFIGURACIONES DEL MIDDLEWARES (Mi aplicación)
+        //CONFIGURACIONES DEL MIDDLEWARES (Mi aplicacin)
         dbConnection();
         middlewares(app);
+        
+        // Swagger UI Config
+        app.use(`${BASE_URL}/docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+        
         routes(app);
+        
+        // Manejador Global de Errores - Siempre de último
+        app.use(errorHandlerGlobal);
 
         app.listen(PORT, () => {
             console.log(`Servidor corriendo en el puerto ${PORT}`);
