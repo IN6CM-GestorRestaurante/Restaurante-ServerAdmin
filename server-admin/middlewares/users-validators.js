@@ -9,6 +9,13 @@ const emailExists = async (email = '') => {
     }
 };
 
+const usernameExists = async (username = '') => {
+    const existeUsuario = await User.findOne({ username });
+    if (existeUsuario) {
+        throw new Error(`El nombre de usuario ${username} ya está registrado`);
+    }
+};
+
 const userExists = async (id = '') => {
     const existeUsuario = await User.findById(id);
     if (!existeUsuario) {
@@ -23,6 +30,18 @@ export const registerValidator = [
     body('email', 'El correo no es válido').isEmail(),
     body('email').custom(emailExists),
     body('password', 'La contraseña debe tener al menos 6 caracteres').isLength({ min: 6 }),
+    checkValidators
+];
+
+export const createUserValidator = [
+    body('name', 'El nombre es obligatorio').notEmpty(),
+    body('surname', 'El apellido es obligatorio').notEmpty(),
+    body('username', 'El nombre de usuario es obligatorio').notEmpty(),
+    body('username').custom(usernameExists),
+    body('email', 'El correo no es válido').isEmail(),
+    body('email').custom(emailExists),
+    body('phone', 'El teléfono debe tener 8 caracteres').isLength({ min: 8, max: 8 }),
+    body('role', 'El rol no es válido').isIn(['ADMIN', 'CLIENT', 'WAITER']),
     checkValidators
 ];
 
