@@ -1,42 +1,61 @@
 import { Router } from 'express';
-import { getCompanies, getCompanyById, createCompany } from './company.controller.js';
+import multer from 'multer';
+import { registerCompanyAndUser, getCompanies, getCompanyById } from './company.controller.js';
+import { registerCompanyValidator } from '../../middlewares/companies-validators.js';
 import { validateJWT, authorizeRole } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
+const upload = multer(); // Almacenamiento en memoria para procesamiento en Saga
 
 /**
  * @swagger
  * tags:
  *   name: Companies
- *   description: API para gestión de Companies (Empresas/Franquicias)
+ *   description: API para la gestión de Empresas y registro de Tenants
  */
+
+/**
+ * @swagger
+ * /companies/register:
+ *   post:
+ *     summary: Registro unificado de Empresa y Administrador (Patrón Saga)
+ *     description: Crea el perfil en MongoDB y las credenciales en PostgreSQL de forma atómica.
+ *     tags: [Companies]
+ *     consumes:
+ *       - multipart/form-data
+ *     responses:
+ *       201:
+ *         description: Empresa y usuario registrados exitosamente
+ *       400:
+ *         description: Error de validación o datos duplicados
+ */
+router.post(
+    '/register',
+    upload.single('logo'),
+    registerCompanyValidator,
+    registerCompanyAndUser
+);
 
 /**
  * @swagger
  * /companies:
  *   get:
- *     summary: Obtener todas las compañías
+ *     summary: Listado de empresas (Solo SUPER_ADMIN)
  *     tags: [Companies]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de compañías
  */
-router.get('/', validateJWT, authorizeRole('SUPER_ADMIN', 'ADMIN_ROLE'), getCompanies);
+router.get('/', validateJWT, authorizeRole('SUPER_ADMIN'), getCompanies);
 
 /**
  * @swagger
- * /companies:
- *   post:
- *     summary: Crear una nueva compañía
+ * /companies/{id}:
+ *   get:
+ *     summary: Obtener detalles de una empresa específica
  *     tags: [Companies]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       201:
- *         description: Compañía creada
  */
-router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'ADMIN_ROLE'), createCompany);
+router.get('/:id', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), getCompanyById);
 
 export default router;
