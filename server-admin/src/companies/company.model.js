@@ -1,25 +1,34 @@
 import mongoose from 'mongoose';
 
+/**
+ * Modelo de Empresa (Company)
+ * Representa la entidad legal y comercial de un cliente del ERP.
+ */
 const companySchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'El nombre de la empresa es obligatorio'],
-        trim: true,
-        unique: true
-    },
-    owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'La empresa debe tener un propietario asociado']
-    },
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
+    // === Identidad Legal ===
+    legalName:     { type: String, required: true, trim: true },              // Razón Social
+    alias:         { type: String, required: true, trim: true, unique: true },// Nombre comercial
+    taxId:         { type: String, required: true, trim: true, unique: true },// NIT / VAT / RFC
+    sector:        { type: String, required: true, enum: ['Restaurante', 'Cafetería', 'Bar', 'Panadería', 'Food Truck', 'Catering', 'Otro'] },
+    companySize:   { type: String, required: true, enum: ['1-10', '11-50', '51-200', '200+'] },
+    // === Localización ===
+    country:       { type: String, required: true, trim: true },
+    timezone:      { type: String, required: true, default: 'America/Guatemala' },
+    currency:      { type: String, required: true, default: 'GTQ', maxLength: 3 },
+    // === Branding ===
+    logo:          { type: String, default: 'companies/default_logo' },       // Cloudinary path
+    subdomain:     { type: String, required: true, trim: true, unique: true, lowercase: true,
+                     match: [/^[a-z0-9-]+$/, 'Subdominio solo permite letras minúsculas, números y guiones'] },
+    // === Propietario (COMPANY_ADMIN) ===
+    owner:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    // === Estado ===
+    isActive:      { type: Boolean, default: true },
+    // === Plan / Billing (futuro) ===
+    plan:          { type: String, enum: ['FREE_TRIAL', 'BASIC', 'PRO', 'ENTERPRISE'], default: 'FREE_TRIAL' },
+    trialEndsAt:   { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } // 30 días
+}, { timestamps: true });
+
+// Índice compuesto para garantizar que un usuario solo sea dueño de una empresa
+companySchema.index({ owner: 1 }, { unique: true });
 
 export default mongoose.model('Company', companySchema);

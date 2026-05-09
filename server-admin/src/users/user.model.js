@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+/**
+ * Modelo de Usuario (User)
+ * Sincronizado con auth-service (PostgreSQL) vía authId.
+ */
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -17,7 +21,7 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     email: {
-        type: String, // Usaremos el email como puente entre Postgres y Mongo
+        type: String, // Puente entre Postgres y Mongo
         required: [true, 'El correo es obligatorio'],
         unique: true
     },
@@ -30,13 +34,16 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['SUPER_ADMIN', 'ADMIN_ROLE', 'COMPANY_ADMIN', 'BRANCH_MANAGER', 'WAITER', 'RECEPTIONIST', 'CLIENT', 'ADMIN'],
+        enum: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER', 'WAITER', 'CHEF', 'CASHIER', 'RECEPTIONIST', 'CLIENT'],
         default: 'WAITER'
+    },
+    authId: {
+        type: Number // Mapeo a User.Id en PostgreSQL
     },
     companyId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
-        required: function() { return this.role !== 'SUPER_ADMIN' && this.role !== 'ADMIN_ROLE'; }
+        required: function() { return this.role !== 'SUPER_ADMIN'; }
     },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -46,13 +53,10 @@ const userSchema = new mongoose.Schema({
     status: {
         type: Boolean,
         default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
-});
+}, { timestamps: true });
 
+// Transformación para el frontend (renombrar _id a uid)
 userSchema.methods.toJSON = function () {
     const {__v, _id, ...user} = this.toObject();
     user.uid = _id;
