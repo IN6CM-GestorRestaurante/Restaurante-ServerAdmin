@@ -1,34 +1,59 @@
-import Company from '../src/companies/company.model.js';
-import Branch from '../src/branchs/branch.model.js';
+import mongoose from 'mongoose';
 
-export const requireCompanyOwnership = async (req, res, next) => {
-    try {
-        const userId = req.usuario?._id; // Usuario autenticado por el token conectado de Postgres/C#
-        if (!userId) {
-            return res.status(401).json({ success: false, message: "No autorizado. Token requerido." });
-        }
+/**
+ * Verifica que un recurso específico pertenezca al tenant del usuario autenticado.
+ * Ideal para proteger rutas con parámetros de ID (GET/:id, PUT/:id, DELETE/:id).
+ * 
+ * @param {mongoose.Model} Model - El modelo Mongoose del recurso a verificar.
+ * @param {string} paramName - El nombre del parámetro en req.params que contiene el ID.
+ * @author Antigravity
+ */
+export const verifyResourceOwnership = (Model, paramName = 'id') => {
+    return async (req, res, next) => {
+        // Los administradores globales saltan esta validación
+        if (req.isSuperAdmin) return next();
 
-        // Buscar qué compañía pertenece al usuario
-        const company = await Company.findOne({ owner: userId });
-        if (!company) {
-            return res.status(403).json({ success: false, message: "No tienes una empresa registrada." });
-        }
-
-        // Inyectar Company en request para que los siguientes controllers no la busquen.
-        req.companyId = company._id;
-        
-        // Si el endpoint interactúa sobre una Branch, verificar la jerarquía
-        if (req.params.branchId || req.body.branchId) {
-            const branchId = req.params.branchId || req.body.branchId;
-            const branch = await Branch.findOne({ _id: branchId, companyId: company._id });
+        try {
+            const resourceId = req.params[paramName];
             
-            if (!branch) {
-                return res.status(403).json({ success: false, message: "Esta sucursal no pertenece a tu empresa." });
+            // Usamos .lean() para mayor rendimiento ya que solo queremos verificar pertenencia
+            const resource = await Model.findById(resourceId).lean();
+
+            if (!resource) {
+                return res.status(404).json({ success: false, message: 'Recurso no encontrado en el sistema.' });
             }
+
+            // Verificación de pertenencia a la empresa (Company Isolation)
+            const resourceCompanyId = resource.companyId?.toString();
+            const userCompanyId = req.companyId?.toString();
+
+            if (resourceCompanyId && resourceCompanyId !== userCompanyId) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'Acceso denegado. El recurso no pertenece a tu organización.' 
+                });
+            }
+
+            // Verificación de pertenencia a la sucursal si el usuario es de sucursal
+            if (req.branchId) {
+                const resourceBranchId = resource.branchId?.toString();
+                const userBranchId = req.branchId?.toString();
+
+                if (resourceBranchId && resourceBranchId !== userBranchId) {
+                    return res.status(403).json({ 
+                        success: false, 
+                        message: 'Acceso denegado. El recurso pertenece a otra sucursal de la organización.' 
+                    });
+                }
+            }
+
+            // Inyectamos el recurso en req para evitar que el controller lo vuelva a consultar
+            req.resource = resource;
+            
+            next();
+        } catch (error) {
+            console.error('Error en validación de propiedad de recurso:', error);
+            res.status(500).json({ success: false, message: 'Error interno al validar propiedad del recurso.' });
         }
-        
-        next();
-    } catch (error) {
-        next(error);
-    }
+    };
 };
