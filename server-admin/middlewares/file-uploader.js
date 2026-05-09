@@ -7,7 +7,7 @@ import {extname} from 'path';
 
 dotenv.config();
 
-// Configuración de Cloudinary
+// Configuración global de Cloudinary
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -20,14 +20,19 @@ const MIMETYPES = [
     'image/jpg',
     'image/webp',
     'image/avif',
+    'image/svg+xml'
 ];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-const createCloudinaryUploader = (folder) => {
+/**
+ * Fábrica para crear cargadores de Multer configurados para Cloudinary.
+ * 
+ * @param {string} folder - Carpeta destino en la nube.
+ * @param {object} customOptions - Configuración de formatos, tamaño y transformaciones.
+ */
+const createCloudinaryUploader = (folder, customOptions = {}) => {
     const storage = new CloudinaryStorage({
         cloudinary: cloudinary,
         params: (req, file) => {
-            // Obtener nombre base sin extensión y sanitizarlo
             const fileExt = extname(file.originalname);
             const baseName = file.originalname.replace(fileExt, '');
             const safeBase = baseName
@@ -35,15 +40,14 @@ const createCloudinaryUploader = (folder) => {
                 .replace(/[^a-z0-9]+/gi, '-')
                 .replace(/^-+|-+$/g, '');
 
-            // UUID corto para evitar colisiones
             const shortUuid = uuidv4().substring(0, 8);
             const publicId = `${safeBase}-${shortUuid}`;
 
             return {
                 folder: folder,
-                public_id: publicId, // no incluir extensión; Cloudinary la calcula
-                allowed_formats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],
-                transformation: [{width: 1000, height: 1000, crop: 'limit'}],
+                public_id: publicId,
+                allowed_formats: customOptions.formats || ['jpeg', 'jpg', 'png', 'webp', 'avif'],
+                transformation: customOptions.transformation || [{width: 1000, height: 1000, crop: 'limit'}],
                 resource_type: 'image',
             };
         },
@@ -55,24 +59,33 @@ const createCloudinaryUploader = (folder) => {
             if (MIMETYPES.includes(file.mimetype)) {
                 cb(null, true);
             } else {
-                cb(new Error(`Solo se permiten imágenes: ${MIMETYPES.join(', ')}`));
+                cb(new Error(`Tipo de archivo no permitido. Solo se aceptan imágenes.`));
             }
         },
         limits: {
-            fileSize: MAX_FILE_SIZE,
+            fileSize: customOptions.maxSize || 10 * 1024 * 1024, // Por defecto 10MB
         },
     });
 };
 
-// Uploader para imágenes de sucursales / logo
-export const uploadBranchImage = createCloudinaryUploader(
-    process.env.CLOUDINARY_TEAMS_FOLDER || 'branches/branch'
-);
+/**
+ * Uploader para imágenes de sucursales.
+ */
+export const uploadBranchImage = createCloudinaryUploader('branches/branch');
 
-// Uploader para imágenes de Menús
-export const uploadMenuImage = createCloudinaryUploader(
-    process.env.CLOUDINARY_MENUS_FOLDER || 'branches/menu'
-);
+/**
+ * Uploader para imágenes de Menús.
+ */
+export const uploadMenuImage = createCloudinaryUploader('branches/menu');
 
-// Export cloudinary instance para usar en delete-file-on-error
+/**
+ * Uploader para Logos de Empresa.
+ * Limitado a 2MB con transformaciones optimizadas para logos.
+ */
+export const uploadCompanyLogo = createCloudinaryUploader('companies', {
+    formats: ['jpg', 'jpeg', 'png', 'webp', 'svg'],
+    maxSize: 2 * 1024 * 1024,
+    transformation: [{ width: 400, height: 400, crop: 'limit', quality: 'auto' }]
+});
+
 export {cloudinary};
