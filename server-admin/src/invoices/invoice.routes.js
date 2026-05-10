@@ -1,65 +1,83 @@
 import { Router } from "express";
-import { checkoutOrder, getInvoicesByBranch } from "./invoice.controller.js";
-import { validateJWT, authorizeRole, checkOwnership } from "../../middlewares/auth.middleware.js";
+import { 
+    createDraftFromOrder, 
+    commitInvoice, 
+    voidInvoice, 
+    getInvoices, 
+    getInvoiceById 
+} from "./invoice.controller.js";
+import { validateJWT, authorizeRole } from "../../middlewares/auth.middleware.js";
+import { injectTenantContext } from "../../middlewares/tenant.middleware.js";
+import { verifyResourceOwnership } from "../../middlewares/tenant-ownership.js";
+import Invoice from "./invoice.model.js";
 
 const router = Router();
+
+// Middlewares globales de seguridad para todo el módulo de facturación
+router.use(validateJWT);
+router.use(injectTenantContext);
+router.use(authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER', 'CASHIER'));
 
 /**
  * @swagger
  * tags:
  *   name: Invoices
- *   description: Gestión de facturación, checkout e inmutabilidad contable (ERP)
+ *   description: Gestión del ciclo de vida de Facturas y Notas de Crédito
  */
 
 /**
  * @swagger
- * /invoices/checkout/{orderId}:
- *   post:
- *     summary: Cierra una orden, libera las mesas y emite la factura legal inmutable
- *     tags: [Invoices]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: orderId
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               paymentMethod:
- *                 type: string
- *                 enum: [CASH, CARD, TRANSFER]
- *     responses:
- *       201:
- *         description: Factura generada y orden cerrada
- *       400:
- *         description: Orden ya pagada o cancelada
- */
-router.post("/checkout/:orderId", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER', 'RECEPTIONIST'), checkoutOrder);
-
-/**
- * @swagger
- * /invoices/branch/{branchId}:
+ * /invoices:
  *   get:
- *     summary: Obtiene la sábana de facturas de una sucursal específica
+ *     summary: Lista facturas aplicando el filtro automático del tenant
  *     tags: [Invoices]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: branchId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Sábana devuelta
  */
-router.get("/branch/:branchId", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), checkOwnership('BRANCH'), getInvoicesByBranch);
+router.get('/', getInvoices);
+
+/**
+ * @swagger
+ * /invoices/{id}:
+ *   get:
+ *     summary: Obtiene detalles profundos de una factura
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:id', verifyResourceOwnership(Invoice), getInvoiceById);
+
+/**
+ * @swagger
+ * /invoices/from-order/{orderId}:
+ *   post:
+ *     summary: Genera un borrador de factura (DRAFT) congelando los ítems de la orden actual
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/from-order/:orderId', createDraftFromOrder);
+
+/**
+ * @swagger
+ * /invoices/{id}/commit:
+ *   put:
+ *     summary: Confirma una factura DRAFT, volviéndola inmutable y cerrando la orden
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put('/:id/commit', verifyResourceOwnership(Invoice), commitInvoice);
+
+/**
+ * @swagger
+ * /invoices/{id}/void:
+ *   put:
+ *     summary: Anula una factura COMMITTED generando su respectiva Nota de Crédito
+ *     tags: [Invoices]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put('/:id/void', verifyResourceOwnership(Invoice), voidInvoice);
 
 export default router;
