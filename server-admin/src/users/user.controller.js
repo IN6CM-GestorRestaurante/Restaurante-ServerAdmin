@@ -1,80 +1,201 @@
 import mongoose from 'mongoose';
 import User from './user.model.js';
+import Branch from '../branchs/branch.model.js';
 
-export const getUsers = async (req, res) => {
+/**
+ * Obtiene el listado de empleados de la empresa o sucursal.
+ * Aplica filtros de tenant automáticamente (COMPANY_ADMIN ve toda la empresa, BRANCH_MANAGER su sucursal).
+ */
+export const getUsers = async (req, res, next) => {
     try {
-        const {limit = 10, from = 0} = req.query;
-        const query = {status: true};
+        const { role, branchId, status } = req.query;
+        
+        // El tenantFilter inyecta companyId (y branchId si es BRANCH_MANAGER o rol operativo)
+        const query = { ...req.tenantFilter };
+        
+        // Filtros opcionales por query params
+        if (role) query.role = role;
+        if (branchId) query.branchId = branchId;
+        if (status !== undefined) query.status = status === 'true';
 
-        const [total, users] = await Promise.all([
-            User.countDocuments(query),
-            User.find(query)
-                .skip(Number(from))
-                .limit(Number(limit))
-        ]);
+        const users = await User.find(query)
+            .populate('companyId', 'legalName alias')
+            .populate('branchId', 'name')
+            .sort({ createdAt: -1 });
 
-        res.status(200).json({success: true, total, users});
+        res.status(200).json({ success: true, count: users.length, data: users });
     } catch (error) {
-        res.status(500).json({success: false, message: 'Error al obtener usuarios', error: error.message});
+        next(error);
     }
 };
 
-export const getProfile = async (req, res) => {
-    try {
-        res.status(200).json({success: true, user: req.user});
-    } catch (error) {
-        res.status(500).json({success: false, message: 'Error al obtener perfil'});
-    }
-};
-
-export const syncProfile = async (req, res) => {
-    try {
-        const {email, role} = req.body;
-
-        const user = new User({
-            name: "Usuario",
-            surname: "Nuevo",
-            username: email.split('@')[0],
-            email,
-            phone: "00000000",
-            role,
-            status: true
-        });
-
-        await user.save();
-
-        res.status(201).json({success: true, user});
-    } catch (error) {
-        console.error("Error al sincronizar perfil:", error);
-        res.status(500).json({success: false, message: 'Error al sincronizar perfil en Mongo'});
-    }
-};
-
-export const updateUser = async (req, res) => {
+/**
+ * Obtiene el detalle de un usuario específico.
+ */
+export const getUserById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { _id, password, email, ...resto } = req.body;
+        
+        const user = await User.findOne({ _id: id, ...req.tenantFilter })
+            .populate('companyId', 'legalName')
+            .populate('branchId', 'name address');
 
-        const user = await User.findByIdAndUpdate(id, resto, { new: true });
+        if (!user) return res.status(404).json({ success: false, message: 'Usuario no encontrado o no pertenece a tu organización' });
+
+        res.status(200).json({ success: true, data: user });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Obtiene el perfil del usuario autenticado actual.
+ */
+export const getProfile = async (req, res, next) => {
+    try {
+        // req.user viene inyectado del middleware validateJWT
+        const user = await User.findById(req.user._id)
+            .populate('companyId', 'legalName')
+            .populate('branchId', 'name');
+            
         res.status(200).json({ success: true, user });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al actualizar usuario', error: error.message });
+        next(error);
     }
 };
 
-export const changeUserStatus = async (req, res) => {
+/**
+ * Crea un empleado en la organización del COMPANY_ADMIN.
+ * No genera credenciales de login (esto se delega al auth-service en una futura fase si se requiere).
+ */
+export const createUser = async (req, res, next) => {
+    try {
+        const { name, surname, email, phone, username, role, branchId } = req.body;
+
+        const allowedRoles = ['BRANCH_MANAGER', 'WAITER', 'CHEF', 'CASHIER', 'RECEPTIONIST'];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ success: false, message: `Rol inválido. Roles permitidos: ${allowedRoles.join(', ')}` });
+        }
+
+        // Validar que la sucursal asignada pertenece a la empresa del COMPANY_ADMIN
+        if (branchId) {
+            const branch = await Branch.findOne({ _id: branchId, companyId: req.companyId });
+            if (!branch) {
+                return res.status(400).json({ success: false, message: 'La sucursal indicada no existe o no pertenece a tu empresa' });
+            }
+        }
+
+        const newUser = new User({
+            name,
+            surname,
+            email,
+            phone,
+            username: username || email.split('@')[0],
+            role,
+            branchId,
+            companyId: req.companyId // Inyectado por el middleware de Tenant
+        });
+
+        await newUser.save();
+
+        res.status(201).json({ success: true, message: 'Empleado creado con éxito', data: newUser });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Actualiza los datos de perfil de un empleado.
+ * El correo (email) no se puede cambiar ya que es el identificador principal.
+ */
+export const updateUser = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-        }
-        
-        user.status = !user.status;
-        await user.save();
+        const { name, surname, phone, role, branchId } = req.body;
 
-        res.status(200).json({ success: true, user, message: `Usuario ${user.status ? 'activado' : 'desactivado'} con éxito` });
+        // Validar propiedad del usuario a modificar (Aislamiento de Tenant)
+        const existingUser = await User.findOne({ _id: id, ...req.tenantFilter });
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
+        }
+
+        if (branchId) {
+            const branch = await Branch.findOne({ _id: branchId, companyId: req.companyId });
+            if (!branch) return res.status(400).json({ success: false, message: 'Sucursal inválida' });
+        }
+
+        existingUser.name = name || existingUser.name;
+        existingUser.surname = surname || existingUser.surname;
+        existingUser.phone = phone || existingUser.phone;
+        existingUser.role = role || existingUser.role;
+        existingUser.branchId = branchId || existingUser.branchId;
+
+        await existingUser.save();
+
+        res.status(200).json({ success: true, message: 'Empleado actualizado', data: existingUser });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al cambiar estado del usuario', error: error.message });
+        next(error);
+    }
+};
+
+/**
+ * Activa o desactiva (soft delete) a un usuario.
+ */
+export const changeUserStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const isActive = req.url.includes('/activate');
+        
+        const existingUser = await User.findOne({ _id: id, ...req.tenantFilter });
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
+        }
+
+        existingUser.status = isActive;
+        await existingUser.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Empleado ${isActive ? 'activado' : 'desactivado'} con éxito`, 
+            data: existingUser 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Endpoint interno para sincronización con auth-service (C#).
+ * Busca un usuario por email y actualiza su rol u otros campos si es necesario.
+ * No crea usuarios nuevos automáticamente por seguridad.
+ */
+export const syncProfile = async (req, res, next) => {
+    try {
+        const { email, role } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email es requerido para sincronizar' });
+        }
+
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            // Si el usuario no existe en Mongo, no lo creamos.
+            // Debe haber sido creado por el flujo Saga de registro (Company) o como Empleado.
+            return res.status(200).json({ 
+                success: true, 
+                message: 'Usuario no encontrado en base de datos local. Sincronización ignorada.' 
+            });
+        }
+
+        if (role) {
+            user.role = role;
+            await user.save();
+        }
+
+        res.status(200).json({ success: true, message: 'Perfil sincronizado correctamente', data: user });
+    } catch (error) {
+        console.error("Error al sincronizar perfil:", error);
+        next(error);
     }
 };
