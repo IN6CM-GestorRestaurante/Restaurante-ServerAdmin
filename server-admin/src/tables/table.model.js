@@ -8,6 +8,11 @@ const tableSchema = new mongoose.Schema({
         ref: 'Branch',
         required: [true, 'La mesa debe estar vinculada a una sucursal']
     },
+    companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'La mesa debe pertenecer a una empresa']
+    },
     number: {
         type: String,
         required: [true, 'El número o identificador de la mesa es obligatorio'],

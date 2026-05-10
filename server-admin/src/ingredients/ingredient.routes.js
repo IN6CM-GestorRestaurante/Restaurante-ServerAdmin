@@ -1,42 +1,66 @@
+'use strict';
+
 import { Router } from 'express';
-import { getIngredients, createIngredient } from './ingredient.controller.js';
+import { 
+    getIngredients, 
+    getIngredientById, 
+    createIngredient, 
+    updateIngredient, 
+    changeIngredientStatus 
+} from './ingredient.controller.js';
 import { validateJWT, authorizeRole } from '../../middlewares/auth.middleware.js';
+import { injectTenantContext } from '../../middlewares/tenant.middleware.js';
+import { verifyResourceOwnership } from '../../middlewares/tenant-ownership.js';
+import Ingredient from './ingredient.model.js';
 
 const router = Router();
+const auth = [validateJWT, injectTenantContext];
 
 /**
  * @swagger
  * tags:
  *   name: Ingredients
- *   description: Gestión del catálogo global de Ingredientes
+ *   description: Gestión del catálogo de ingredientes con aislamiento de Tenant
  */
 
-/**
- * @swagger
- * /ingredients:
- *   get:
- *     summary: Listar ingredientes
- *     tags: [Ingredients]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista devuelta
- */
-router.get('/', validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), getIngredients);
+router.get('/', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'), 
+    getIngredients
+);
 
-/**
- * @swagger
- * /ingredients:
- *   post:
- *     summary: Crear ingrediente
- *     tags: [Ingredients]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       201:
- *         description: Creado
- */
-router.post('/', validateJWT, authorizeRole('COMPANY_ADMIN'), createIngredient);
+router.get('/:id', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'), 
+    verifyResourceOwnership(Ingredient), 
+    getIngredientById
+);
+
+router.post('/', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    createIngredient
+);
+
+router.put('/:id', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    verifyResourceOwnership(Ingredient), 
+    updateIngredient
+);
+
+router.put('/:id/activate', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    verifyResourceOwnership(Ingredient), 
+    changeIngredientStatus
+);
+
+router.put('/:id/desactivate', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    verifyResourceOwnership(Ingredient), 
+    changeIngredientStatus
+);
 
 export default router;

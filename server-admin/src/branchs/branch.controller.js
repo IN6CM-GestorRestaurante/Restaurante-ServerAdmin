@@ -3,132 +3,95 @@
 import mongoose from 'mongoose';
 import Branch from './branch.model.js';
 
-export const getBranches = async (req, res) => {
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Branch:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *         address:
+ *           type: string
+ *         isActive:
+ *           type: boolean
+ */
+
+/**
+ * Listar sucursales filtradas por el contexto del tenant.
+ */
+export const getBranches = async (req, res, next) => {
     try {
-        const {isActive} = req.query;
-
-        const filter = {};
-        if (isActive !== undefined) {
-            filter.isActive = isActive === 'true';
-        }
-
-        const branches = await Branch.find(filter)
-            .sort({createdAt: -1});
+        // req.tenantFilter es inyectado por injectTenantContext
+        const branches = await Branch.find({ ...req.tenantFilter, isActive: true })
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
-            total: branches.length,
+            count: branches.length,
             data: branches
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener las sucursales',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const getBranchById = async (req, res) => {
+/**
+ * Obtener detalle de sucursal.
+ */
+export const getBranchById = async (req, res, next) => {
     try {
-        const {id} = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'ID de MongoDB no válido'
-            });
-        }
-
-        const branch = await Branch.findById(id);
-
+        // req.resource es inyectado por verifyResourceOwnership
+        const branch = req.resource || await Branch.findOne({ _id: req.params.id, ...req.tenantFilter });
+        
         if (!branch) {
-            return res.status(404).json({
-                success: false,
-                message: 'Sucursal no encontrada'
-            });
+            return res.status(404).json({ success: false, message: 'Sucursal no encontrada' });
         }
 
-        res.status(200).json({
-            success: true,
-            data: branch
-        });
+        res.status(200).json({ success: true, data: branch });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener la sucursal',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const createBranch = async (req, res) => {
+/**
+ * Crear nueva sucursal vinculada al tenant actual.
+ */
+export const createBranch = async (req, res, next) => {
     try {
-        const branchData = req.body;
-
-        // Asignar companyId si no se recibe uno
-        if (!branchData.companyId) {
-            const mongoose = (await import('mongoose')).default;
-            const Company = mongoose.model('Company');
-            let defaultCompany = await Company.findOne();
-            
-            if (!defaultCompany) {
-                // Crear una compañía por defecto para evitar bloqueos
-                defaultCompany = new Company({
-                    name: 'Empresa Principal',
-                    owner: req.user._id, // Asignar al usuario actual como propietario
-                    isActive: true
-                });
-                await defaultCompany.save();
-            }
-            branchData.companyId = defaultCompany._id;
-        }
+        const branchData = { 
+            ...req.body, 
+            companyId: req.companyId // Inyectar ID de la empresa desde el token/contexto
+        };
 
         if (req.file) {
-            const extension = req.file.path.split('.').pop();
-            const fileName = req.file.filename;
-
-            const relativePath = fileName.substring(
-                fileName.indexOf('photos/')
-            );
-
-            branchData.photos = [`${relativePath}.${extension}`];
-        } else {
-            branchData.photos = ['photos/default_photos_logo'];
+            branchData.photos = [req.file.path]; // Cloudinary URL
         }
 
         const branch = new Branch(branchData);
         await branch.save();
 
         res.status(201).json({
-            succes: true,
+            success: true,
             message: 'Sucursal creada exitosamente',
             data: branch
         });
-
     } catch (error) {
-        res.status(500).json({
-            succes: false,
-            message: 'Error al crear la sucursal',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const updateBranch = async (req, res) => {
+/**
+ * Actualizar sucursal.
+ */
+export const updateBranch = async (req, res, next) => {
     try {
-        const {id} = req.params;
-        const updateData = {...req.body};
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
+        const { id } = req.params;
+        const updateData = { ...req.body };
 
         if (req.file) {
-            const extension = req.file.path.split('.').pop();
-            const fileName = req.file.filename;
-            const relativePath = fileName.substring(fileName.indexOf('photos/'));
-            updateData.photos = [`${relativePath}.${extension}`];
+            updateData.photos = [req.file.path];
         }
 
         const branch = await Branch.findByIdAndUpdate(id, updateData, {
@@ -136,57 +99,32 @@ export const updateBranch = async (req, res) => {
             runValidators: true
         });
 
-        if (!branch) {
-            return res.status(404).json({
-                success: false,
-                message: 'Sucursal no encontrada'
-            });
-        }
-
         res.status(200).json({
             success: true,
             message: 'Sucursal actualizada exitosamente',
             data: branch
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error al actualizar la sucursal',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const changeBranchStatus = async (req, res) => {
+/**
+ * Cambiar estado (Activar/Desactivar) - Soft Delete.
+ */
+export const changeBranchStatus = async (req, res, next) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         const isActive = req.url.includes('/activate');
-        const action = isActive ? 'activada' : 'desactivada';
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
-
-        const branch = await Branch.findByIdAndUpdate(
-            id,
-            {isActive},
-            {new: true}
-        );
-
-        if (!branch) {
-            return res.status(404).json({success: false, message: 'Sucursal no encontrada'});
-        }
+        
+        const branch = await Branch.findByIdAndUpdate(id, { isActive }, { new: true });
 
         res.status(200).json({
             success: true,
-            message: `Sucursal ${action} exitosamente`,
+            message: `Sucursal ${isActive ? 'activada' : 'desactivada'} exitosamente`,
             data: branch
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al cambiar el estado',
-            error: error.message
-        });
+        next(error);
     }
 };

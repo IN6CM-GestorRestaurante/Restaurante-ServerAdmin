@@ -3,18 +3,19 @@
 import mongoose from 'mongoose';
 import Table from './table.model.js';
 
-export const getTables = async (req, res) => {
+/**
+ * Listar mesas filtradas por el contexto del tenant (Sucursal o Empresa).
+ */
+export const getTables = async (req, res, next) => {
     try {
-        const {branch, status, isActive} = req.query;
-
-        const filter = {};
-        if (isActive !== undefined) filter.isActive = isActive === 'true';
-        if (status) filter.status = status;
-        if (branch) filter.branch = branch;
+        const filter = { ...req.tenantFilter, isActive: true };
+        
+        if (req.query.branch) filter.branch = req.query.branch;
+        if (req.query.status) filter.status = req.query.status;
 
         const tables = await Table.find(filter)
             .populate('branch', 'name')
-            .sort({number: 1});
+            .sort({ number: 1 });
 
         res.status(200).json({
             success: true,
@@ -22,72 +23,57 @@ export const getTables = async (req, res) => {
             data: tables
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener el inventario de mesas',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const getTableById = async (req, res) => {
+/**
+ * Obtener detalle de una mesa.
+ */
+export const getTableById = async (req, res, next) => {
     try {
-        const {id} = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
-
-        const table = await Table.findById(id).populate('branch', 'name');
-
+        const table = req.resource || await Table.findOne({ _id: req.params.id, ...req.tenantFilter });
+        
         if (!table) {
-            return res.status(404).json({success: false, message: 'Mesa no encontrada'});
+            return res.status(404).json({ success: false, message: 'Mesa no encontrada' });
         }
 
-        res.status(200).json({success: true, data: table});
+        res.status(200).json({ success: true, data: table });
     } catch (error) {
-        res.status(500).json({success: false, error: error.message});
+        next(error);
     }
 };
 
-export const createTable = async (req, res) => {
+/**
+ * Registrar nueva mesa vinculada al tenant.
+ */
+export const createTable = async (req, res, next) => {
     try {
-        const tableData = req.body;
+        const tableData = { 
+            ...req.body, 
+            companyId: req.companyId 
+        };
 
         const table = new Table(tableData);
         await table.save();
 
         res.status(201).json({
             success: true,
-            message: 'Mesa registrada exitosamente en el inventario',
+            message: 'Mesa registrada exitosamente',
             data: table
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al registrar la mesa',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const updateTable = async (req, res) => {
+/**
+ * Actualizar datos de la mesa.
+ */
+export const updateTable = async (req, res, next) => {
     try {
-        const {id} = req.params;
-        const updateData = req.body;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
-
-        const table = await Table.findByIdAndUpdate(id, updateData, {
-            new: true,
-            runValidators: true
-        });
-
-        if (!table) {
-            return res.status(404).json({success: false, message: 'Mesa no encontrada'});
-        }
+        const { id } = req.params;
+        const table = await Table.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
 
         res.status(200).json({
             success: true,
@@ -95,44 +81,26 @@ export const updateTable = async (req, res) => {
             data: table
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error al actualizar la mesa',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const changeTableStatus = async (req, res) => {
+/**
+ * Eliminar (Soft Delete) o Activar mesa del inventario.
+ */
+export const changeTableStatus = async (req, res, next) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         const isActive = req.url.includes('/activate');
-        const action = isActive ? 'activada' : 'desactivada';
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
-
-        const table = await Table.findByIdAndUpdate(
-            id,
-            {isActive},
-            {new: true}
-        );
-
-        if (!table) {
-            return res.status(404).json({success: false, message: 'Mesa no encontrada'});
-        }
+        
+        const table = await Table.findByIdAndUpdate(id, { isActive }, { new: true });
 
         res.status(200).json({
             success: true,
-            message: `Mesa ${action} exitosamente del inventario`,
+            message: `Mesa ${isActive ? 'activada' : 'desactivada'} exitosamente`,
             data: table
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al cambiar el estado de la mesa',
-            error: error.message
-        });
+        next(error);
     }
 };
