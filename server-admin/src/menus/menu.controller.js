@@ -3,18 +3,20 @@
 import mongoose from 'mongoose';
 import Menu from './menu.model.js';
 
-export const getMenus = async (req, res) => {
+/**
+ * Listar platillos del menú filtrados por tenant.
+ */
+export const getMenus = async (req, res, next) => {
     try {
-        const {branch, category, isActive} = req.query;
-
-        const filter = {};
-        if (isActive !== undefined) filter.isActive = isActive === 'true';
-        if (branch) filter.branch = branch;
-        if (category) filter.category = category;
+        const filter = { ...req.tenantFilter, isActive: true };
+        
+        // Filtros adicionales por query
+        if (req.query.branch) filter.branch = req.query.branch;
+        if (req.query.category) filter.category = req.query.category;
 
         const menus = await Menu.find(filter)
             .populate('branch', 'name')
-            .sort({category: 1});
+            .sort({ category: 1, name: 1 });
 
         res.status(200).json({
             success: true,
@@ -22,43 +24,39 @@ export const getMenus = async (req, res) => {
             data: menus
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener el menú',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const getMenuById = async (req, res) => {
+/**
+ * Obtener detalle de un plato.
+ */
+export const getMenuById = async (req, res, next) => {
     try {
-        const {id} = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
-
-        const menu = await Menu.findById(id).populate('branch', 'name');
-
+        const menu = req.resource || await Menu.findOne({ _id: req.params.id, ...req.tenantFilter });
+        
         if (!menu) {
-            return res.status(404).json({success: false, message: 'Plato no encontrado'});
+            return res.status(404).json({ success: false, message: 'Plato no encontrado' });
         }
 
-        res.status(200).json({success: true, data: menu});
+        res.status(200).json({ success: true, data: menu });
     } catch (error) {
-        res.status(500).json({success: false, error: error.message});
+        next(error);
     }
 };
 
-export const createMenu = async (req, res) => {
+/**
+ * Crear nuevo plato en el menú vinculado al tenant.
+ */
+export const createMenu = async (req, res, next) => {
     try {
-        const menuData = req.body;
+        const menuData = { 
+            ...req.body, 
+            companyId: req.companyId 
+        };
 
         if (req.file) {
-            const extension = req.file.path.split('.').pop();
-            const fileName = req.file.filename;
-            const relativePath = fileName.substring(fileName.indexOf('menus/'));
-            menuData.image = `${relativePath}.${extension}`;
+            menuData.image = req.file.path; // Cloudinary URL
         }
 
         const menu = new Menu(menuData);
@@ -66,39 +64,27 @@ export const createMenu = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Plato creado exitosamente en el menú',
+            message: 'Plato creado exitosamente',
             data: menu
         });
     } catch (error) {
-        res.status(500).json({
-            succes: false,
-            message: 'Error al crear el plato',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const updateMenu = async (req, res) => {
+/**
+ * Actualizar plato del menú.
+ */
+export const updateMenu = async (req, res, next) => {
     try {
-        const {id} = req.params;
-        const updateData = {...req.body};
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
+        const { id } = req.params;
+        const updateData = { ...req.body };
 
         if (req.file) {
-            const extension = req.file.path.split('.').pop();
-            const fileName = req.file.filename;
-            const relativePath = fileName.substring(fileName.indexOf('menus/'));
-            updateData.image = `${relativePath}.${extension}`;
+            updateData.image = req.file.path;
         }
 
-        const menu = await Menu.findByIdAndUpdate(id, updateData, {new: true});
-
-        if (!menu) {
-            return res.status(404).json({success: false, message: 'Plato no encontrado'});
-        }
+        const menu = await Menu.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 
         res.status(200).json({
             success: true,
@@ -106,40 +92,26 @@ export const updateMenu = async (req, res) => {
             data: menu
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error al actualizar el plato',
-            error: error.message
-        });
+        next(error);
     }
 };
 
-export const changeMenuStatus = async (req, res) => {
+/**
+ * Cambiar estado del plato (Soft Delete).
+ */
+export const changeMenuStatus = async (req, res, next) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         const isActive = req.url.includes('/activate');
-        const action = isActive ? 'activado' : 'desactivado';
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({success: false, message: 'ID no válido'});
-        }
-
-        const menu = await Menu.findByIdAndUpdate(id, {isActive}, {new: true});
-
-        if (!menu) {
-            return res.status(404).json({success: false, message: 'Plato no encontrado'});
-        }
+        
+        const menu = await Menu.findByIdAndUpdate(id, { isActive }, { new: true });
 
         res.status(200).json({
             success: true,
-            message: `Plato ${action} exitosamente`,
+            message: `Plato ${isActive ? 'activado' : 'desactivado'} exitosamente`,
             data: menu
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al cambiar el estado del plato',
-            error: error.message
-        });
+        next(error);
     }
 };

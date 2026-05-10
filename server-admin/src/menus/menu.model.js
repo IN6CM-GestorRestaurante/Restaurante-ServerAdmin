@@ -8,6 +8,11 @@ const menuSchema = new mongoose.Schema({
         ref: 'Branch',
         required: [true, 'El menú debe estar vinculado a una sucursal']
     },
+    companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'El menú debe pertenecer a una empresa']
+    },
     name: {
         type: String,
         required: [true, 'El nombre del plato es obligatorio'],

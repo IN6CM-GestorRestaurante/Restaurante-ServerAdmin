@@ -1,6 +1,6 @@
 'use strict';
 
-import {Router} from "express";
+import { Router } from "express";
 import {
     changeBranchStatus,
     createBranch,
@@ -8,7 +8,6 @@ import {
     getBranches,
     updateBranch
 } from "./branch.controller.js";
-
 import {
     validateCreateBranch,
     validateGetBranchById,
@@ -16,80 +15,65 @@ import {
     validateUpdateBranch
 } from "../../middlewares/branches-validators.js";
 import { validateJWT, authorizeRole } from '../../middlewares/auth.middleware.js';
-
-import {uploadBranchImage} from "../../middlewares/file-uploader.js";
+import { injectTenantContext } from '../../middlewares/tenant.middleware.js';
+import { verifyResourceOwnership } from '../../middlewares/tenant-ownership.js';
+import { uploadBranchImage } from "../../middlewares/file-uploader.js";
+import Branch from "./branch.model.js";
 
 const router = Router();
+const auth = [validateJWT, injectTenantContext];
 
 /**
  * @swagger
  * tags:
  *   name: Branches
- *   description: Gestión de sucursales (Branches).
+ *   description: Gestión de sucursales con aislamiento de Tenant
  */
 
-/**
- * @swagger
- * /branches:
- *   get:
- *     summary: Obtiene la lista de todas las sucursales
- *     tags: [Branches]
- *     responses:
- *       200:
- *         description: Lista devuelta
- */
-router.get('/', validateJWT, getBranches);
+router.get('/', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'), 
+    getBranches
+);
 
-/**
- * @swagger
- * /branches/{id}:
- *   get:
- *     summary: Obtiene una sucursal por su ID
- *     tags: [Branches]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Sucursal obtenida
- */
-router.get('/:id', validateJWT, validateGetBranchById, getBranchById);
+router.get('/:id', 
+    ...auth, 
+    validateGetBranchById, 
+    verifyResourceOwnership(Branch), 
+    getBranchById
+);
 
-/**
- * @swagger
- * /branches:
- *   post:
- *     summary: Crea una nueva sucursal dependiente de un Company
- *     tags: [Branches]
- *     responses:
- *       201:
- *         description: Sucursal creada
- */
-router.post('/', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), uploadBranchImage.single('photos'), validateCreateBranch, createBranch);
+router.post('/', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    uploadBranchImage.single('photos'), 
+    validateCreateBranch, 
+    createBranch
+);
 
-/**
- * @swagger
- * /branches/{id}:
- *   put:
- *     summary: Actualiza una sucursal
- *     tags: [Branches]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Sucursal actualizada
- */
-router.put('/:id', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), uploadBranchImage.single('photos'), validateUpdateBranch, updateBranch);
+router.put('/:id', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    verifyResourceOwnership(Branch), 
+    uploadBranchImage.single('photos'), 
+    validateUpdateBranch, 
+    updateBranch
+);
 
-//PUT
-router.put('/:id/activate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), validateBranchStatusChange, changeBranchStatus);
-router.put('/:id/desactivate', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'ADMIN_ROLE'), validateBranchStatusChange, changeBranchStatus);
+router.put('/:id/activate', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    verifyResourceOwnership(Branch), 
+    validateBranchStatusChange, 
+    changeBranchStatus
+);
+
+router.put('/:id/desactivate', 
+    ...auth, 
+    authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
+    verifyResourceOwnership(Branch), 
+    validateBranchStatusChange, 
+    changeBranchStatus
+);
 
 export default router;
