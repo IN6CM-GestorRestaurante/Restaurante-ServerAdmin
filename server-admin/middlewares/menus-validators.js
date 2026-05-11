@@ -21,9 +21,18 @@ export const validateCreateMenu = [
         .withMessage('La descripción es obligatoria')
         .isLength({min: 10, max: 500})
         .withMessage('La descripción debe tener entre 10 y 500 caracteres'),
-    body('ingredients')
-        .notEmpty()
-        .withMessage('Los ingredientes son obligatorios'),
+    body('itemType')
+        .optional()
+        .isIn(['SINGLE', 'COMBO'])
+        .withMessage('El tipo de item debe ser SINGLE o COMBO'),
+    body('recipe')
+        .optional()
+        .isArray()
+        .withMessage('La receta debe ser un arreglo'),
+    body('comboItems')
+        .optional()
+        .isArray()
+        .withMessage('Los items del combo deben ser un arreglo'),
     body('price')
         .notEmpty()
         .withMessage('El precio es obligatorio')
@@ -32,7 +41,7 @@ export const validateCreateMenu = [
     body('category')
         .notEmpty()
         .withMessage('La categoría es obligatoria')
-        .isIn(['Entrada', 'Plato Fuerte', 'Postre', 'Bebida', 'Acompañamiento', 'Otro'])
+        .isIn(['Entrada', 'Plato Fuerte', 'Postre', 'Bebida', 'Acompañamiento', 'Combo', 'Otro'])
         .withMessage('No es una categoría de menú válida'),
     checkValidators
 ];
@@ -51,15 +60,23 @@ export const validateUpdateMenu = [
         .optional()
         .isLength({min: 10, max: 500})
         .withMessage('La descripción debe tener entre 10 y 500 caracteres'),
-    body('ingredients')
-        .optional(),
+    body('itemType')
+        .optional()
+        .isIn(['SINGLE', 'COMBO'])
+        .withMessage('El tipo de item debe ser SINGLE o COMBO'),
+    body('recipe')
+        .optional()
+        .isArray(),
+    body('comboItems')
+        .optional()
+        .isArray(),
     body('price')
         .optional()
         .isFloat({min: 0})
         .withMessage('El precio no puede ser negativo'),
     body('category')
         .optional()
-        .isIn(['Entrada', 'Plato Fuerte', 'Postre', 'Bebida', 'Acompañamiento', 'Otro'])
+        .isIn(['Entrada', 'Plato Fuerte', 'Postre', 'Bebida', 'Acompañamiento', 'Combo', 'Otro'])
         .withMessage('Categoría no válida'),
     checkValidators
 ];

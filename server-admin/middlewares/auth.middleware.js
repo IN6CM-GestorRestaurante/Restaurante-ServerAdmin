@@ -21,11 +21,25 @@ export const validateJWT = async (req, res, next) => {
         // El JWT de C# puede traer el email en 'email' o en el claim con namespace de SOAP
         const email = decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
         
+        const role = decoded.role || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+        
         if (!email) {
             return res.status(401).json({ success: false, message: 'Token inválido: No se encontró el identificador del usuario' });
         }
 
-        // Buscamos al usuario en MongoDB por su correo
+        // Bypass: El SUPER_ADMIN se origina desde el seeder de C# (PostgreSQL) y no necesita perfil en MongoDB
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN_ROLE') {
+            req.user = {
+                _id: '000000000000000000000000', // Mock ObjectId válido para Mongoose si se requiere
+                email: email,
+                role: 'SUPER_ADMIN', // Normalizamos para que coincida con authorizeRole('SUPER_ADMIN')
+                status: true
+            };
+            req.usuario = req.user;
+            return next();
+        }
+
+        // Buscamos al usuario regular en MongoDB por su correo
         const user = await User.findOne({ email });
 
         if (!user) {

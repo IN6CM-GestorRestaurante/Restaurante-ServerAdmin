@@ -3,6 +3,7 @@ import Order from "./order.model.js";
 import Table from "../tables/table.model.js";
 import { deductStockForItems, restoreStockForItems } from "../stocks/stock.service.js";
 import Menu from "../menus/menu.model.js";
+import OrderAudit from './orderAudit.model.js';
 
 const VALID_TRANSITIONS = {
     "pending": ["in-kitchen", "cancelled"],
@@ -33,8 +34,6 @@ export const getActiveOrdersByBranch = async (req, res, next) => {
  * Crea una nueva orden y ocupa las mesas correspondientes.
  */
 export const createOrder = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
         const { tables, branch, items } = req.body;
         const waiter = req.user._id;
@@ -42,8 +41,7 @@ export const createOrder = async (req, res) => {
         // Validar disponibilidad de mesas
         const tableUpdates = await Table.updateMany(
             { _id: { $in: tables }, status: "Disponible" },
-            { $set: { status: "Ocupada" } },
-            { session }
+            { $set: { status: "Ocupada" } }
         );
 
         if (tableUpdates.modifiedCount !== tables.length) {
@@ -52,21 +50,33 @@ export const createOrder = async (req, res) => {
 
         // Snapshot de precios actuales para la orden
         for (const item of items) {
-            const menu = await Menu.findById(item.menuItem).session(session);
+            const menu = await Menu.findById(item.menuItem);
             if (!menu) throw new Error(`El platillo ${item.menuItem} no existe.`);
-            item.priceAtTime = menu.price;
+            // Usar effectivePrice del virtual para considerar promociones
+            item.priceAtTime = menu.effectivePrice ?? menu.price;
         }
 
         const newOrder = new Order({ tables, waiter, branch, items });
-        await newOrder.save({ session });
+        await newOrder.save();
 
-        await session.commitTransaction();
+        // Registro de auditoría
+        await OrderAudit.create([{
+            orderId:   newOrder._id,
+            actorId:   req.user._id,
+            actorRole: req.user.role,
+            actorName: `${req.user.name} ${req.user.surname}`,
+            action:    'ORDER_CREATED',
+            details: {
+                description: `Orden creada con ${items.length} ítems en mesa(s) ${tables.join(', ')}`
+            },
+            branchId:  branch,
+            companyId: req.body.companyId || req.user.companyId,
+            ipAddress: req.ip
+        }]);
+
         res.status(201).json({ success: true, order: newOrder });
     } catch (error) {
-        await session.abortTransaction();
         res.status(400).json({ success: false, message: error.message });
-    } finally {
-        session.endSession();
     }
 };
 
@@ -107,6 +117,25 @@ export const updateItemStatus = async (req, res) => {
         }
 
         item.status = nextStatus;
+
+        // Registro de auditoría
+        await OrderAudit.create({
+            orderId:   order._id,
+            actorId:   req.user._id,
+            actorRole: req.user.role,
+            actorName: `${req.user.name} ${req.user.surname}`,
+            action:    'ITEM_STATUS_CHANGED',
+            details: {
+                menuItemId:     item.menuItem,
+                previousStatus: previousStatus,
+                newStatus:      nextStatus,
+                description:    `Ítem cambió de "${previousStatus}" a "${nextStatus}"`
+            },
+            branchId:  order.branch,
+            companyId: req.user.companyId,
+            ipAddress: req.ip
+        });
+
         await order.save();
 
         res.status(200).json({ success: true, order });
@@ -154,10 +183,47 @@ export const updateOrderStatus = async (req, res) => {
         }
 
         order.status = nextStatus;
+
+        // Registro de auditoría
+        await OrderAudit.create({
+            orderId:   order._id,
+            actorId:   req.user._id,
+            actorRole: req.user.role,
+            actorName: `${req.user.name} ${req.user.surname}`,
+            action:    nextStatus === 'cancelled' ? 'ORDER_CANCELLED' : 'ORDER_STATUS_CHANGED',
+            details: {
+                previousStatus: previousStatus,
+                newStatus:      nextStatus,
+                description:    nextStatus === 'cancelled'
+                    ? `Orden cancelada (estado previo: "${previousStatus}"). Mesas liberadas. Stock restaurado para ${order.items.filter(i => ['in-kitchen','ready','delivered'].includes(i.status)).length} ítems.`
+                    : `Estado de orden cambió de "${previousStatus}" a "${nextStatus}"`
+            },
+            branchId:  order.branch,
+            companyId: req.user.companyId,
+            ipAddress: req.ip
+        });
+
         await order.save();
 
         res.status(200).json({ success: true, message: "Estado de orden actualizado correctamente", order });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * Obtiene el historial de auditoría de una orden específica.
+ * GET /orders/:orderId/audit
+ */
+export const getOrderAuditLog = async (req, res, next) => {
+    try {
+        const { orderId } = req.params;
+        const auditLog = await OrderAudit.find({ orderId })
+            .sort({ performedAt: -1 })
+            .populate('actorId', 'name surname role')
+            .lean();
+        res.status(200).json({ success: true, data: auditLog, count: auditLog.length });
+    } catch (error) {
+        next(error);
     }
 };

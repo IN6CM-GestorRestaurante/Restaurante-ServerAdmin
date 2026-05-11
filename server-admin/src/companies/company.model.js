@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 /**
  * Modelo de Empresa (Company)
- * Representa la entidad legal y comercial de un cliente del ERP.
+ * Representa la entidad legal y comercial de un cliente del ERP en un entorno multi-tenant.
  */
 const companySchema = new mongoose.Schema({
     // === Identidad Legal ===
@@ -22,13 +22,12 @@ const companySchema = new mongoose.Schema({
     // === Propietario (COMPANY_ADMIN) ===
     owner:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     // === Estado ===
-    isActive:      { type: Boolean, default: true },
-    // === Plan / Billing (futuro) ===
-    plan:          { type: String, enum: ['FREE_TRIAL', 'BASIC', 'PRO', 'ENTERPRISE'], default: 'FREE_TRIAL' },
-    trialEndsAt:   { type: Date, default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } // 30 días
+    isActive:      { type: Boolean, default: true }
 }, { timestamps: true });
 
-// Índice compuesto para garantizar que un usuario solo sea dueño de una empresa
+/**
+ * Índice compuesto para garantizar que un usuario solo sea dueño de una empresa.
+ */
 companySchema.index({ owner: 1 }, { unique: true });
 
 export default mongoose.model('Company', companySchema);

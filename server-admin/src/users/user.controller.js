@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import axios from 'axios';
 import User from './user.model.js';
 import Branch from '../branchs/branch.model.js';
 
@@ -93,12 +94,33 @@ export const createUser = async (req, res, next) => {
             username: username || email.split('@')[0],
             role,
             branchId,
-            companyId: req.companyId // Inyectado por el middleware de Tenant
+            companyId: req.companyId, // Inyectado por el middleware de Tenant
+            status: false // Se activa después de crear credenciales
         });
 
         await newUser.save();
 
-        res.status(201).json({ success: true, message: 'Empleado creado con éxito', data: newUser });
+        // Crear credenciales en auth-service (C#)
+        const authResponse = await axios.post(
+            `${process.env.AUTH_SERVICE_URL}/api/v1/auth/register`,
+            { 
+                email: newUser.email, 
+                password: "Password123!", // Contraseña por defecto para empleados
+                username: newUser.username,
+                mongoId: newUser._id.toString(),
+                companyMongoId: req.companyId.toString(),
+                role: newUser.role
+            },
+            { timeout: 10000 }
+        );
+
+        newUser.status = true;
+        if (authResponse.data?.authUserId) {
+            newUser.authId = authResponse.data.authUserId;
+        }
+        await newUser.save();
+
+        res.status(201).json({ success: true, message: 'Empleado creado con éxito (Password default: Password123!)', data: newUser });
     } catch (error) {
         next(error);
     }
