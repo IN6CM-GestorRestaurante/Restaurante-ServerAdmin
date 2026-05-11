@@ -24,8 +24,10 @@ export const registerCompanyAndUser = async (req, res, next) => {
             uploadedLogoUrl = await uploadLogoFromBuffer(req.file.buffer, req.file.originalname);
         }
 
-        // PASO 2: Crear Perfil de Usuario en MongoDB (Estado: Inactivo)
-        createdUser = await User.create({
+        // PASO 2: Crear Perfil de Usuario en MongoDB (sin companyId aún — se asigna en PASO 4)
+        // Nota: Desactivamos validación porque companyId es required para COMPANY_ADMIN,
+        // pero la Company no existe todavía. Se valida al guardar en PASO 4.
+        createdUser = new User({
             name: req.body.name,
             surname: req.body.surname,
             username: req.body.username || req.body.email.split('@')[0],
@@ -34,6 +36,7 @@ export const registerCompanyAndUser = async (req, res, next) => {
             role: 'COMPANY_ADMIN',
             status: false 
         });
+        await createdUser.save({ validateBeforeSave: false });
 
         // PASO 3: Crear Empresa en MongoDB vinculada al usuario
         createdCompany = await Company.create({
@@ -50,21 +53,32 @@ export const registerCompanyAndUser = async (req, res, next) => {
             owner: createdUser._id
         });
 
-        // PASO 4: Vincular Usuario con el ID de la empresa creada
+        // PASO 4: Vincular Usuario con el ID de la empresa creada (ahora sí pasa validación)
         createdUser.companyId = createdCompany._id;
-        await createdUser.save();
+        await createdUser.save(); // Validación completa aquí
 
         // PASO 5: Llamar al auth-service (C#) para crear credenciales y disparar email de verificación
-        // El auth-service recibirá el email y password, y gestionará la seguridad en PostgreSQL
+        // Enviamos mongoId y companyMongoId para que PostgreSQL pueda vincular los registros
         const authResponse = await axios.post(
             `${process.env.AUTH_SERVICE_URL}/api/v1/auth/register`,
             { 
                 email: req.body.email, 
                 password: req.body.password,
-                username: createdUser.username
+                username: createdUser.username,
+                mongoId: createdUser._id.toString(),
+                companyMongoId: createdCompany._id.toString()
             },
             { timeout: 10000 }
         );
+
+        // PASO 6: Activar usuario tras registro exitoso en auth-service
+        // El usuario se creó con status:false para evitar acceso parcial si el Saga fallaba.
+        // Ahora que TODO el flujo completó, lo activamos.
+        createdUser.status = true;
+        if (authResponse.data?.authUserId) {
+            createdUser.authId = authResponse.data.authUserId;
+        }
+        await createdUser.save();
 
         return res.status(201).json({
             success: true,

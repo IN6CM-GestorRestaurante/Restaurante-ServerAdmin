@@ -22,7 +22,7 @@ import ingredientRoutes from '../src/ingredients/ingredient.routes.js';
 import stockRoutes from '../src/stocks/stock.routes.js'; 
 import invoiceRoutes from '../src/invoices/invoice.routes.js';
 
-const BASE_URL = '/branch/v1';
+const BASE_URL = '/api/v1';
 
 //Configuración de mi aplicación
 //Se almacena en una funcion para que pueda ser exportada 
@@ -77,7 +77,7 @@ const initServer = async (app) => {
             res.status(200).json(
                 {
                 status: 'ok',
-                service: 'Branch Admin',
+                service: 'Restaurante ERP API',
                 version: '1.0.0'
                 }
             );

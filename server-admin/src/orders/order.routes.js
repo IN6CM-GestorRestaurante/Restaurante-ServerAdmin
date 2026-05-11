@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createOrder, updateItemStatus, updateOrderStatus, getActiveOrdersByBranch } from "./order.controller.js";
+import { createOrder, updateItemStatus, updateOrderStatus, getActiveOrdersByBranch, getOrderAuditLog } from "./order.controller.js";
 import { createOrderValidator, updateItemStatusValidator, updateOrderStatusValidator } from "../../middlewares/orders-validators.js";
 import { validateJWT, authorizeRole, checkOwnership } from "../../middlewares/auth.middleware.js";
 
@@ -48,7 +48,7 @@ const router = Router();
  *       201:
  *         description: Orden creada exitosamente
  */
-router.post("/", validateJWT, authorizeRole('WAITRESS', 'WAITER', 'BRANCH_MANAGER'), createOrderValidator, createOrder);
+router.post("/", validateJWT, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER', 'BRANCH_MANAGER'), createOrderValidator, createOrder);
 
 /**
  * @swagger
@@ -99,7 +99,7 @@ router.get("/branch/:branchId", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRA
  *       200:
  *         description: Platillo actualizado
  */
-router.patch("/:orderId/item/:itemId/status", validateJWT, authorizeRole('WAITRESS', 'WAITER', 'BRANCH_MANAGER'), updateItemStatusValidator, updateItemStatus);
+router.patch("/:orderId/item/:itemId/status", validateJWT, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER', 'BRANCH_MANAGER'), updateItemStatusValidator, updateItemStatus);
 
 /**
  * @swagger
@@ -128,5 +128,23 @@ router.patch("/:orderId/item/:itemId/status", validateJWT, authorizeRole('WAITRE
  *         description: Estado general actualizado
  */
 router.patch("/:id/status", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), updateOrderStatusValidator, updateOrderStatus);
+
+/**
+ * @swagger
+ * /orders/{orderId}/audit:
+ *   get:
+ *     summary: Obtiene el historial de auditoría de una orden específica
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Historial de auditoría devuelto exitosamente
+ */
+router.get('/:orderId/audit', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'), getOrderAuditLog);
 
 export default router;

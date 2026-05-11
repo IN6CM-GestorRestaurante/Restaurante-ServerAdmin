@@ -1,0 +1,1456 @@
+{
+  "info": {
+    "_postman_id": "95561781-376d-476e-b03d-b9e50118b7e0",
+    "name": "Restaurante - Server Admin (Node.js)",
+    "description": "ERP API. Base: /api/v1. Todos los endpoints requieren JWT salvo registro.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48421810",
+    "_collection_link": "https://go.postman.co/collection/48421810-95561781-376d-476e-b03d-b9e50118b7e0?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "[01] ERP - Empresas y Sucursales",
+      "item": [
+        {
+          "name": "Companies",
+          "item": [
+            {
+              "name": "Registrar Empresa + Admin (Saga)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  if (d.data && d.data.company) pm.environment.set('ID_COMPANY', d.data.company._id || d.data.company.uid);",
+                      "  if (d.data && d.data.user) pm.environment.set('ID_ADMIN_USER', d.data.user._id || d.data.user.uid);",
+                      "  pm.test('Registro exitoso', () => pm.expect(pm.response.code).to.eql(201));",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Carlos",
+                      "type": "text"
+                    },
+                    {
+                      "key": "surname",
+                      "value": "Mendoza",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "admin@elgransabor.gt",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "Password123!",
+                      "type": "text"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "55512345",
+                      "type": "text"
+                    },
+                    {
+                      "key": "username",
+                      "value": "cmendoza",
+                      "type": "text"
+                    },
+                    {
+                      "key": "legalName",
+                      "value": "Restaurantes El Gran Sabor S.A.",
+                      "type": "text"
+                    },
+                    {
+                      "key": "alias",
+                      "value": "El Gran Sabor",
+                      "type": "text"
+                    },
+                    {
+                      "key": "taxId",
+                      "value": "NIT-123456-7",
+                      "type": "text"
+                    },
+                    {
+                      "key": "sector",
+                      "value": "Restaurante",
+                      "type": "text"
+                    },
+                    {
+                      "key": "companySize",
+                      "value": "11-50",
+                      "type": "text"
+                    },
+                    {
+                      "key": "country",
+                      "value": "Guatemala",
+                      "type": "text"
+                    },
+                    {
+                      "key": "timezone",
+                      "value": "America/Guatemala",
+                      "type": "text"
+                    },
+                    {
+                      "key": "currency",
+                      "value": "GTQ",
+                      "type": "text"
+                    },
+                    {
+                      "key": "subdomain",
+                      "value": "elgransabor",
+                      "type": "text"
+                    },
+                    {
+                      "key": "logo",
+                      "type": "file",
+                      "value": ""
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{server_url}}/companies/register",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "companies",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Empresas (SUPER_ADMIN)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/companies",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "companies"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Empresa por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/companies/{{ID_COMPANY}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "companies",
+                    "{{ID_COMPANY}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Branches",
+          "item": [
+            {
+              "name": "Crear Sucursal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.data?._id || d.data?.uid;",
+                      "  if (id) pm.environment.set('ID_BRANCH', id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sucursal Centro\",\n  \"description\": \"Sucursal principal ubicada en el centro histórico de la ciudad.\",\n  \"address\": \"6a Avenida 12-45, Zona 1\",\n  \"openingTime\": \"07:00\",\n  \"closingTime\": \"22:00\",\n  \"category\": \"Casera\",\n  \"averagePrice\": 65,\n  \"email\": \"centro@elsabor.gt\",\n  \"phoneNumber\": \"55512345\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/branches",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "branches"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Sucursales",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/branches",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "branches"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Sucursal por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/branches/{{ID_BRANCH}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "branches",
+                    "{{ID_BRANCH}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar Sucursal",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sucursal Centro (Actualizada)\",\n  \"averagePrice\": 70\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/branches/{{ID_BRANCH}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "branches",
+                    "{{ID_BRANCH}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar Sucursal",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/branches/{{ID_BRANCH}}/activate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "branches",
+                    "{{ID_BRANCH}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar Sucursal",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/branches/{{ID_BRANCH}}/desactivate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "branches",
+                    "{{ID_BRANCH}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Users (Empleados)",
+          "item": [
+            {
+              "name": "Crear Empleado",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.data?._id || d.data?.uid;",
+                      "  if (id) pm.environment.set('ID_USER_CLIENT', id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Juan\",\n  \"surname\": \"Pérez\",\n  \"username\": \"jperez\",\n  \"email\": \"jperez@elsabor.com\",\n  \"phone\": \"12341234\",\n  \"role\": \"WAITER\",\n  \"branchId\": \"{{ID_BRANCH}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/users",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Usuarios",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/users",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Usuario por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/users/{{ID_USER_CLIENT}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{ID_USER_CLIENT}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar Usuario",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Juan Carlos\",\n  \"role\": \"CASHIER\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/users/{{ID_USER_CLIENT}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{ID_USER_CLIENT}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Mi Perfil",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/users/profile",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "profile"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar Usuario",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/users/{{ID_USER_CLIENT}}/activate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{ID_USER_CLIENT}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar Usuario",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/users/{{ID_USER_CLIENT}}/desactivate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{ID_USER_CLIENT}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[02] ERP - Logística e Inventario",
+      "item": [
+        {
+          "name": "Ingredients",
+          "item": [
+            {
+              "name": "Crear Ingrediente",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.data?._id || d.data?.uid;",
+                      "  if (id) pm.environment.set('ID_INGREDIENT', id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Pechuga de Pollo\",\n  \"unit\": \"kg\",\n  \"costPrice\": 15.50\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/ingredients",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "ingredients"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Ingredientes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/ingredients",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "ingredients"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Ingrediente por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/ingredients/{{ID_INGREDIENT}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "ingredients",
+                    "{{ID_INGREDIENT}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar Ingrediente",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"costPrice\": 18.00\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/ingredients/{{ID_INGREDIENT}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "ingredients",
+                    "{{ID_INGREDIENT}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar Ingrediente",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/ingredients/{{ID_INGREDIENT}}/activate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "ingredients",
+                    "{{ID_INGREDIENT}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar Ingrediente",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/ingredients/{{ID_INGREDIENT}}/desactivate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "ingredients",
+                    "{{ID_INGREDIENT}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Stocks",
+          "item": [
+            {
+              "name": "Asignar/Actualizar Stock",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branchId\": \"{{ID_BRANCH}}\",\n  \"ingredientId\": \"{{ID_INGREDIENT}}\",\n  \"quantity\": 100,\n  \"minStock\": 15\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/stocks",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "stocks"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Ver Stock por Sucursal",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/stocks",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "stocks"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[03] ERP - Operaciones de Sala",
+      "item": [
+        {
+          "name": "Menus",
+          "item": [
+            {
+              "name": "Crear Platillo (SINGLE)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.data?._id || d.data?.uid;",
+                      "  if (id) pm.environment.set('ID_MENU', id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branch\": \"{{ID_BRANCH}}\",\n  \"itemType\": \"SINGLE\",\n  \"name\": \"Limonada\",\n  \"description\": \"Limonada tradicional.\",\n  \"price\": 10.00,\n  \"category\": \"Bebida\",\n  \"recipe\": [\n    {\"ingredientId\": \"{{ID_INGREDIENT}}\", \"quantityRequired\": 0.35}\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/menus",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Crear Combo",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branch\": \"{{ID_BRANCH}}\",\n  \"itemType\": \"COMBO\",\n  \"name\": \"Combo Almuerzo\",\n  \"description\": \"Incluye Pollo en Pepián + Limonada.\",\n  \"price\": 60.00,\n  \"category\": \"Combo\",\n  \"comboItems\": [\n    {\"menuItemId\": \"{{ID_MENU_PEPIAN}}\", \"quantity\": 1},\n    {\"menuItemId\": \"{{ID_MENU_LIMONADA}}\", \"quantity\": 1}\n  ],\n  \"promotion\": {\n    \"isActive\": true,\n    \"discountType\": \"PERCENTAGE\",\n    \"discountValue\": 10,\n    \"startsAt\": \"2026-01-01\",\n    \"endsAt\": \"2026-12-31\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/menus",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Platillos",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/menus",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Platillo por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/menus/{{ID_MENU}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{ID_MENU}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar Platillo",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"price\": 60.00\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/menus/{{ID_MENU}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{ID_MENU}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar Platillo",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/menus/{{ID_MENU}}/activate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{ID_MENU}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar Platillo",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/menus/{{ID_MENU}}/desactivate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "menus",
+                    "{{ID_MENU}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Tables",
+          "item": [
+            {
+              "name": "Crear Mesa",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.data?._id || d.data?.uid;",
+                      "  if (id) pm.environment.set('ID_TABLE', id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branch\": \"{{ID_BRANCH}}\",\n  \"number\": \"T01\",\n  \"capacity\": 4,\n  \"location\": \"Sala Principal\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/tables",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "tables"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Mesas",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/tables",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "tables"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Mesa por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/tables/{{ID_TABLE}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{ID_TABLE}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar Mesa",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"capacity\": 6\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/tables/{{ID_TABLE}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{ID_TABLE}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar Mesa",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/tables/{{ID_TABLE}}/activate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{ID_TABLE}}",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar Mesa",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/tables/{{ID_TABLE}}/desactivate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "tables",
+                    "{{ID_TABLE}}",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reservations",
+          "item": [
+            {
+              "name": "Crear Reservación",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"branch\": \"{{ID_BRANCH}}\",\n  \"table\": \"{{ID_TABLE}}\",\n  \"type\": \"En Mesa\",\n  \"date\": \"2026-12-31T20:00:00Z\",\n  \"notes\": \"Cena de fin de año\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/reservations",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "reservations"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Reservaciones",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/reservations",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "reservations"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Reservación por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/reservations/ID_RESERVATION",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "ID_RESERVATION"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar Reservación",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"notes\": \"Cambio de hora — ahora a las 21:00\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/reservations/ID_RESERVATION",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "ID_RESERVATION"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Activar Reservación",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/reservations/ID_RESERVATION/activate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "ID_RESERVATION",
+                    "activate"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar Reservación",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/reservations/ID_RESERVATION/desactivate",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "reservations",
+                    "ID_RESERVATION",
+                    "desactivate"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "[04] ERP - Ventas y Facturación",
+      "item": [
+        {
+          "name": "Orders",
+          "item": [
+            {
+              "name": "Crear Orden (como WAITER — auto-inject)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.order?._id;",
+                      "  if (id) pm.environment.set('ID_ORDER', id);",
+                      "  const items = d.order?.items;",
+                      "  if (items && items.length) pm.environment.set('ID_ORDER_ITEM', items[0]._id);",
+                      "}"
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tables\": [\"{{ID_TABLE}}\"],\n  \"items\": [\n    {\"menuItem\": \"{{ID_MENU}}\", \"quantity\": 2}\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/orders",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ]
+                },
+                "description": "Como WAITER: branch y waiter se auto-inyectan por middleware. Como COMPANY_ADMIN: agregar \"branch\": \"{{ID_BRANCH}}\" al body."
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Órdenes por Sucursal",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/orders/branch/{{ID_BRANCH}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "branch",
+                    "{{ID_BRANCH}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cambiar Estado de Ítem",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"in-kitchen\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/orders/{{ID_ORDER}}/item/{{ID_ORDER_ITEM}}/status",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{ID_ORDER}}",
+                    "item",
+                    "{{ID_ORDER_ITEM}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cambiar Estado de Orden",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"paid\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/orders/{{ID_ORDER}}/status",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{ID_ORDER}}",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Historial de Auditoría de Orden",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/orders/{{ID_ORDER}}/audit",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{ID_ORDER}}",
+                    "audit"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Invoices",
+          "item": [
+            {
+              "name": "Crear Factura DRAFT desde Orden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "  const d = pm.response.json();",
+                      "  const id = d.data?._id;",
+                      "  if (id) pm.environment.set('ID_INVOICE', id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/invoices/from-order/{{ID_ORDER}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "invoices",
+                    "from-order",
+                    "{{ID_ORDER}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar Facturas",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/invoices",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "invoices"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Obtener Factura por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{server_url}}/invoices/{{ID_INVOICE}}",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "invoices",
+                    "{{ID_INVOICE}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Confirmar Factura (COMMIT)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"paymentMethod\": \"CASH\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/invoices/{{ID_INVOICE}}/commit",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "invoices",
+                    "{{ID_INVOICE}}",
+                    "commit"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Anular Factura (VOID)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Cliente cambió de opinión\"\n}"
+                },
+                "url": {
+                  "raw": "{{server_url}}/invoices/{{ID_INVOICE}}/void",
+                  "host": [
+                    "{{server_url}}"
+                  ],
+                  "path": [
+                    "invoices",
+                    "{{ID_INVOICE}}",
+                    "void"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "server_url",
+      "value": "http://localhost:3001/api/v1",
+      "description": "Base URL del ERP (ya incluye /api/v1)"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "description": "Se obtiene del Login en Auth Service"
+    },
+    {
+      "key": "ID_BRANCH",
+      "value": ""
+    }
+  ]
+}

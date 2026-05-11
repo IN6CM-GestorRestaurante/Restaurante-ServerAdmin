@@ -3,12 +3,69 @@ import Stock from './stock.model.js';
 import Menu from '../menus/menu.model.js';
 
 /**
+ * Desempaqueta combos en sus ítems individuales (SINGLE) recursivamente.
+ * Un COMBO se reemplaza por sus sub-ítems con las cantidades multiplicadas.
+ * 
+ * @param {Array} items - [{ menuItem (ObjectId), quantity (Number) }]
+ * @param {ClientSession} [session] - Sesión de Mongoose para transacciones.
+ * @param {Set} [visited] - Set de IDs ya visitados para evitar ciclos infinitos.
+ * @returns {Array} - Array plano de ítems SINGLE [{ menuItem, quantity }]
+ */
+const flattenOrderItems = async (items, session = null, visited = new Set()) => {
+    const flatItems = [];
+    const menuItemIds = items.map(i => i.menuItem);
+    const query = Menu.find({ _id: { $in: menuItemIds } }).select('itemType recipe comboItems');
+    if (session) query.session(session);
+    const menus = await query;
+
+    for (const item of items) {
+        const menu = menus.find(m => m._id.toString() === item.menuItem.toString());
+        if (!menu) continue;
+
+        if (menu.itemType === 'SINGLE') {
+            // Acumular: si el mismo SINGLE aparece varias veces, sumar quantities
+            const existing = flatItems.find(f => f.menuItem.toString() === item.menuItem.toString());
+            if (existing) {
+                existing.quantity += item.quantity;
+            } else {
+                flatItems.push({ menuItem: item.menuItem, quantity: item.quantity });
+            }
+        } else if (menu.itemType === 'COMBO') {
+            const menuId = menu._id.toString();
+            if (visited.has(menuId)) {
+                throw new Error(`Referencia circular detectada en combo: ${menuId}`);
+            }
+            visited.add(menuId);
+
+            // Desempaquetar: cada comboItem se multiplica por la quantity del combo
+            const subItems = menu.comboItems.map(ci => ({
+                menuItem: ci.menuItemId,
+                quantity: ci.quantity * item.quantity
+            }));
+
+            // Recursión: un combo podría contener otro combo
+            const resolved = await flattenOrderItems(subItems, session, visited);
+            
+            for (const resolved_item of resolved) {
+                const existing = flatItems.find(f => f.menuItem.toString() === resolved_item.menuItem.toString());
+                if (existing) {
+                    existing.quantity += resolved_item.quantity;
+                } else {
+                    flatItems.push(resolved_item);
+                }
+            }
+        }
+    }
+    return flatItems;
+};
+
+/**
  * Gestiona la deducción o restauración de inventario basada en los ítems de una orden.
+ * Soporta COMBOS desempaquetándolos automáticamente.
  * 
  * @param {string} branchId - ID de la sucursal donde se opera.
  * @param {Array} items - Arreglo de ítems [{ menuItem, quantity }].
  * @param {string} mode - 'DEDUCT' para restar, 'RESTORE' para sumar.
- * @author Antigravity
  */
 const processStockUpdate = async (branchId, items, mode = 'DEDUCT') => {
     const session = await mongoose.startSession();
@@ -16,8 +73,11 @@ const processStockUpdate = async (branchId, items, mode = 'DEDUCT') => {
     try {
         const isDeduct = mode === 'DEDUCT';
         
-        // 1. Obtener recetas de todos los platillos
-        const menuItemIds = items.map(i => i.menuItem);
+        // Desempaquetar combos en ítems individuales SINGLE
+        const flatItems = await flattenOrderItems(items, session);
+
+        // 1. Obtener recetas de todos los platillos SINGLE resultantes
+        const menuItemIds = flatItems.map(i => i.menuItem);
         const menus = await Menu.find({ _id: { $in: menuItemIds } })
             .select('name recipe')
             .populate('recipe.ingredientId', 'name unit')
@@ -25,7 +85,7 @@ const processStockUpdate = async (branchId, items, mode = 'DEDUCT') => {
 
         // 2. Calcular demanda consolidada por ingrediente
         const demand = new Map();
-        for (const item of items) {
+        for (const item of flatItems) {
             const menu = menus.find(m => m._id.toString() === item.menuItem.toString());
             if (!menu || !menu.recipe?.length) continue;
 
