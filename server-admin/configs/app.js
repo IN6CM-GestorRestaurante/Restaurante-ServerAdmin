@@ -4,17 +4,18 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { corsOptions } from './cors-configuration.js';
 import { dbConnection } from '../configs/db.js';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
 import { errorHandlerGlobal } from '../middlewares/handle-errors.js';
+import { antiCsrfGuard } from '../middlewares/auth.middleware.js';
 
 //Rutas
 import tablesRoutes from '../src/tables/table.routes.js';
 import menusRoutes from '../src/menus/menu.routes.js';
 import reservationsRoutes from '../src/reservations/reservation.routes.js';
-import usersRoutes from '../src/users/user.routes.js'
 import orderRoutes from '../src/orders/order.routes.js';
 import branchRoutes from '../src/branchs/branch.routes.js'; 
 import companyRoutes from '../src/companies/company.routes.js'; 
@@ -31,6 +32,8 @@ const middlewares = (app) => {
     app.use(express.urlencoded( { extended: false, limit: '10mb'}));
     app.use(express.json({limit: '10mb'}));
     app.use(cors(corsOptions));
+    app.use(cookieParser());
+    app.use(antiCsrfGuard);
     app.use(morgan('dev'));
 }
 
@@ -46,7 +49,6 @@ const routes = (app) => {
     app.use(`${BASE_URL}/reservations`, reservationsRoutes);
     app.use(`${BASE_URL}/orders`, orderRoutes);
     app.use(`${BASE_URL}/invoices`, invoiceRoutes);
-    app.use(`${BASE_URL}/users`, usersRoutes);
 }
 
 //FUNDIC“N PARA INICIAR EL SERVIDOR

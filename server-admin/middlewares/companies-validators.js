@@ -1,15 +1,6 @@
 import { body } from 'express-validator';
 import { checkValidators } from './check-validators.js';
-import User from '../src/users/user.model.js';
 import Company from '../src/companies/company.model.js';
-
-/**
- * Validador personalizado para verificar si el correo ya existe.
- */
-const emailExists = async (email = '') => {
-    const user = await User.findOne({ email });
-    if (user) throw new Error(`El correo ${email} ya está registrado`);
-};
 
 /**
  * Validador personalizado para verificar si el subdominio está en uso.
@@ -35,7 +26,6 @@ export const registerCompanyValidator = [
     body('name', 'El nombre del propietario es obligatorio').notEmpty(),
     body('surname', 'El apellido del propietario es obligatorio').notEmpty(),
     body('email', 'El correo no es válido').isEmail(),
-    body('email').custom(emailExists),
     body('password', 'La contraseña debe tener al menos 6 caracteres').isLength({ min: 6 }),
     body('phone', 'El teléfono de contacto es obligatorio').notEmpty(),
     
