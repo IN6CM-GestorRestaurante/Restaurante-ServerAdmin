@@ -8,8 +8,7 @@ const OrderSchema = new Schema(
             required: [true, "Al menos una mesa es obligatoria"]
         }],
         waiter: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
+            type: String,
             required: [true, "El mesero es obligatorio"]
         },
         branch: {

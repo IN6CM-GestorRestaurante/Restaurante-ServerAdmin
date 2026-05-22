@@ -18,8 +18,8 @@ const InvoiceSchema = new Schema({
     companyId:  { type: Schema.Types.ObjectId, ref: 'Company', required: true },
     
     // === Usuarios ===
-    billedBy:   { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    customerId: { type: Schema.Types.ObjectId, ref: 'User' },
+    billedBy:   { type: String, required: true },
+    customerId: { type: String },
     
     // === Snapshot de ítems (inmutable una vez pasada a COMMITTED) ===
     itemsSnapshot: [{
