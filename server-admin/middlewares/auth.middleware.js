@@ -1,16 +1,11 @@
 import jwt from 'jsonwebtoken';
-import User from '../src/users/user.model.js';
 
 /**
- * Middleware para validar el Token JWT y sincronizar con el usuario de MongoDB.
- * 
- * @param {import('express').Request} req - Objeto de petición Express.
- * @param {import('express').Response} res - Objeto de respuesta Express.
- * @param {import('express').NextFunction} next - Función para continuar al siguiente middleware.
+ * Middleware para validar el Token JWT y extraer el usuario desde las claims (PostgreSQL).
  */
 export const validateJWT = async (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        const token = req.cookies['X-Auth-Token'];
         if (!token) {
             return res.status(401).json({ success: false, message: 'Falta token de acceso' });
         }
@@ -18,47 +13,26 @@ export const validateJWT = async (req, res, next) => {
         // El SECRETORPRIVATEKEY debe estar en el .env (es la misma llave que usa C#)
         const decoded = jwt.verify(token, process.env.SECRETORPRIVATEKEY);
         
-        // El JWT de C# puede traer el email en 'email' o en el claim con namespace de SOAP
         const email = decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
-        
         const role = decoded.role || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+        const userId = decoded.sub || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+        const companyMongoId = decoded.companyMongoId;
+        const branchMongoId = decoded.branchMongoId;
         
-        if (!email) {
+        if (!email || !userId) {
             return res.status(401).json({ success: false, message: 'Token inválido: No se encontró el identificador del usuario' });
         }
 
-        // Bypass: El SUPER_ADMIN se origina desde el seeder de C# (PostgreSQL) y no necesita perfil en MongoDB
-        if (role === 'SUPER_ADMIN' || role === 'ADMIN_ROLE') {
-            req.user = {
-                _id: '000000000000000000000000', // Mock ObjectId válido para Mongoose si se requiere
-                email: email,
-                role: 'SUPER_ADMIN', // Normalizamos para que coincida con authorizeRole('SUPER_ADMIN')
-                status: true
-            };
-            req.usuario = req.user;
-            return next();
-        }
-
-        // Buscamos al usuario regular en MongoDB por su correo
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Usuario no sincronizado. Completa tu registro." 
-            });
-        }
-
-        if (user.status === false) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Usuario desactivado." 
-            });
-        }
-
-        // Inyectamos el usuario en la petición para uso posterior
-        req.user = user;
-        req.usuario = user; // Compatibilidad heredada
+        // Instanciamos req.user directamente a partir de las claims del JWT
+        req.user = {
+            _id: userId, // PostgreSQL GUID string
+            email: email,
+            role: role,
+            companyId: companyMongoId, // Para compatibilidad multitenancy en Node.js
+            branchId: branchMongoId,   // Para compatibilidad multitenancy en Node.js
+            status: true
+        };
+        req.usuario = req.user; // Compatibilidad heredada
 
         next();
     } catch (error) {
@@ -69,8 +43,6 @@ export const validateJWT = async (req, res, next) => {
 
 /**
  * Middleware para autorizar el acceso basado en roles.
- * 
- * @param {...string} allowedRoles - Lista de roles permitidos.
  */
 export const authorizeRole = (...allowedRoles) => {
     return (req, res, next) => {
@@ -91,8 +63,6 @@ export const authorizeRole = (...allowedRoles) => {
 
 /**
  * Middleware para verificar la propiedad de los recursos (Multitenancy).
- * 
- * @param {string} resourceType - Tipo de recurso ('COMPANY', 'BRANCH', etc).
  */
 export const checkOwnership = (resourceType) => {
     return (req, res, next) => {
@@ -124,4 +94,17 @@ export const checkOwnership = (resourceType) => {
 
         next();
     };
+};
+
+/**
+ * Middleware protector contra CSRF verificando la cabecera estándar de mutación controlada.
+ */
+export const antiCsrfGuard = (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    const customHeader = req.headers['x-requested-with'];
+    if (!customHeader || customHeader !== 'XMLHttpRequest') {
+      return res.status(403).json({ error: 'CSRF_VIOLATION_ATTEMPT_BLOCKED: Cabecera de validación ausente.' });
+    }
+  }
+  next();
 };
