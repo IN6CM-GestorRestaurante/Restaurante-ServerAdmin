@@ -14,7 +14,7 @@ const CreditNoteSchema = new Schema({
     originalInvoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice', required: true },
     companyId:         { type: Schema.Types.ObjectId, ref: 'Company', required: true },
     branchId:          { type: Schema.Types.ObjectId, ref: 'Branch', required: true },
-    issuedBy:          { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    issuedBy:          { type: String, required: true },
     
     // === Detalles de la Anulación / Ajuste ===
     reason: { type: String, required: true },

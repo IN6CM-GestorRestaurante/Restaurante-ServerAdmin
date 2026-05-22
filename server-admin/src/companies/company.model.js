@@ -20,7 +20,7 @@ const companySchema = new mongoose.Schema({
     subdomain:     { type: String, required: true, trim: true, unique: true, lowercase: true,
                      match: [/^[a-z0-9-]+$/, 'Subdominio solo permite letras minúsculas, números y guiones'] },
     // === Propietario (COMPANY_ADMIN) ===
-    owner:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    owner:         { type: String, required: true },
     // === Estado ===
     isActive:      { type: Boolean, default: true }
 }, { timestamps: true });

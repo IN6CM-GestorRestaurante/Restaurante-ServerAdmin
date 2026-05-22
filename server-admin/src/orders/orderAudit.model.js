@@ -10,7 +10,7 @@ const orderAuditSchema = new Schema({
     orderId:   { type: Schema.Types.ObjectId, ref: 'Order', required: true, index: true },
     
     // Quién realizó la acción (snapshot del actor)
-    actorId:   { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    actorId:   { type: String, required: true },
     actorRole: { type: String, required: true },
     actorName: { type: String, required: true },
     

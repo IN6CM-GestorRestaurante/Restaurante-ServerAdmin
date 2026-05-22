@@ -1,8 +1,8 @@
 import axios from 'axios';
-import User from '../users/user.model.js';
 import Company from './company.model.js';
 import { uploadLogoFromBuffer } from './company.cloudinary.js';
 import { cloudinary } from '../../middlewares/file-uploader.js';
+import mongoose from 'mongoose';
 
 /**
  * Registra una nueva empresa y su administrador principal usando el patrón Saga.
@@ -14,9 +14,9 @@ import { cloudinary } from '../../middlewares/file-uploader.js';
  * @author Antigravity
  */
 export const registerCompanyAndUser = async (req, res, next) => {
-    let createdUser = null;
     let createdCompany = null;
     let uploadedLogoUrl = null;
+    let authUserId = null;
     
     try {
         // PASO 1: Subida de logo a Cloudinary (si existe)
@@ -24,22 +24,32 @@ export const registerCompanyAndUser = async (req, res, next) => {
             uploadedLogoUrl = await uploadLogoFromBuffer(req.file.buffer, req.file.originalname);
         }
 
-        // PASO 2: Crear Perfil de Usuario en MongoDB (sin companyId aún — se asigna en PASO 4)
-        // Nota: Desactivamos validación porque companyId es required para COMPANY_ADMIN,
-        // pero la Company no existe todavía. Se valida al guardar en PASO 4.
-        createdUser = new User({
-            name: req.body.name,
-            surname: req.body.surname,
-            username: req.body.username || req.body.email.split('@')[0],
-            email: req.body.email,
-            phone: req.body.phone,
-            role: 'COMPANY_ADMIN',
-            status: false 
-        });
-        await createdUser.save({ validateBeforeSave: false });
+        // PASO 2: Pre-generar el MongoDB companyId para vincular Postgres↔Mongo
+        const companyId = new mongoose.Types.ObjectId();
 
-        // PASO 3: Crear Empresa en MongoDB vinculada al usuario
+        // PASO 3: Llamar al auth-service (C#) para crear credenciales y disparar email de verificación
+        // Enviamos companyMongoId para que PostgreSQL pueda vincular los registros
+        const authResponse = await axios.post(
+            `${process.env.AUTH_SERVICE_URL}/api/v1/auth/register`,
+            { 
+                email: req.body.email, 
+                password: req.body.password,
+                username: req.body.username || req.body.email.split('@')[0],
+                companyMongoId: companyId.toString(),
+                role: 'COMPANY_ADMIN'
+            },
+            { timeout: 10000 }
+        );
+
+        if (!authResponse.data || !authResponse.data.authUserId) {
+            throw new Error('AUTH_SERVICE_ERROR: No se recibió el identificador de usuario desde el servicio de autenticación.');
+        }
+
+        authUserId = authResponse.data.authUserId; // GUID String proveniente de PostgreSQL
+
+        // PASO 4: Crear Empresa en MongoDB vinculada al usuario
         createdCompany = await Company.create({
+            _id: companyId,
             legalName: req.body.legalName,
             alias: req.body.alias,
             taxId: req.body.taxId,
@@ -50,35 +60,8 @@ export const registerCompanyAndUser = async (req, res, next) => {
             currency: req.body.currency || 'GTQ',
             subdomain: req.body.subdomain,
             logo: uploadedLogoUrl || 'companies/default_logo',
-            owner: createdUser._id
+            owner: authUserId.toString()
         });
-
-        // PASO 4: Vincular Usuario con el ID de la empresa creada (ahora sí pasa validación)
-        createdUser.companyId = createdCompany._id;
-        await createdUser.save(); // Validación completa aquí
-
-        // PASO 5: Llamar al auth-service (C#) para crear credenciales y disparar email de verificación
-        // Enviamos mongoId y companyMongoId para que PostgreSQL pueda vincular los registros
-        const authResponse = await axios.post(
-            `${process.env.AUTH_SERVICE_URL}/api/v1/auth/register`,
-            { 
-                email: req.body.email, 
-                password: req.body.password,
-                username: createdUser.username,
-                mongoId: createdUser._id.toString(),
-                companyMongoId: createdCompany._id.toString()
-            },
-            { timeout: 10000 }
-        );
-
-        // PASO 6: Activar usuario tras registro exitoso en auth-service
-        // El usuario se creó con status:false para evitar acceso parcial si el Saga fallaba.
-        // Ahora que TODO el flujo completó, lo activamos.
-        createdUser.status = true;
-        if (authResponse.data?.authUserId) {
-            createdUser.authId = authResponse.data.authUserId;
-        }
-        await createdUser.save();
 
         return res.status(201).json({
             success: true,
@@ -86,9 +69,9 @@ export const registerCompanyAndUser = async (req, res, next) => {
             data: {
                 company: createdCompany,
                 user: {
-                    uid: createdUser._id,
-                    email: createdUser.email,
-                    role: createdUser.role
+                    uid: authUserId,
+                    email: req.body.email,
+                    role: 'COMPANY_ADMIN'
                 }
             }
         });
@@ -100,10 +83,6 @@ export const registerCompanyAndUser = async (req, res, next) => {
 
         if (createdCompany) {
             await Company.findByIdAndDelete(createdCompany._id).catch(err => console.error('Rollback Error (Company):', err));
-        }
-
-        if (createdUser) {
-            await User.findByIdAndDelete(createdUser._id).catch(err => console.error('Rollback Error (User):', err));
         }
 
         if (uploadedLogoUrl && !uploadedLogoUrl.includes('default_logo')) {
@@ -131,7 +110,7 @@ export const registerCompanyAndUser = async (req, res, next) => {
  */
 export const getCompanies = async (req, res, next) => {
     try {
-        const companies = await Company.find({ isActive: true }).populate('owner', 'name surname email');
+        const companies = await Company.find({ isActive: true });
         res.status(200).json({ success: true, data: companies });
     } catch (error) {
         next(error);
@@ -143,7 +122,7 @@ export const getCompanies = async (req, res, next) => {
  */
 export const getCompanyById = async (req, res, next) => {
     try {
-        const company = await Company.findById(req.params.id).populate('owner');
+        const company = await Company.findById(req.params.id);
         if (!company) return res.status(404).json({ success: false, message: 'Empresa no encontrada' });
         res.status(200).json({ success: true, data: company });
     } catch (error) {
