@@ -1,31 +1,14 @@
 import mongoose from 'mongoose';
 
-const stockSchema = new mongoose.Schema({
-    branchId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Branch',
-        required: [true, 'El stock debe pertenecer a una sucursal']
-    },
-    ingredientId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Ingredient',
-        required: [true, 'El ingrediente es obligatorio']
-    },
-    quantity: {
-        type: Number,
-        required: [true, 'La cantidad de inventario es obligatoria'],
-        min: [0, 'El stock no puede ser negativo']
-    },
-    minStock: {
-        type: Number,
-        required: [true, 'El stock mínimo es obligatorio'],
-        min: [0, 'El stock mínimo no puede ser negativo']
-    }
-}, {
-    timestamps: true
-});
+const StockSchema = new mongoose.Schema({
+  branchId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true, ref: 'Branch' },
+  ingredientId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true, ref: 'Ingredient' },
+  quantity: { type: Number, required: true, min: 0 },   // Existencia física real
+  reserved: { type: Number, required: true, default: 0, min: 0 }, // Inventario en Stash (Comandado)
+  minStock: { type: Number, required: true, default: 0 }
+}, { collection: 'stocks', timestamps: true, autoIndex: false });
 
-// Índice compuesto para no repetir el mismo ingrediente en la misma sucursal
-stockSchema.index({branchId: 1, ingredientId: 1}, {unique: true});
+StockSchema.index({ branchId: 1, ingredientId: 1 }, { unique: true });
 
-export default mongoose.model('Stock', stockSchema);
+export const Stock = mongoose.model('Stock', StockSchema);
+export default Stock;
