@@ -2,137 +2,86 @@
 
 import mongoose from 'mongoose';
 
-/**
- * Modelo de Menú (Menu)
- * Define los platillos (SINGLE) y paquetes (COMBO) ofrecidos por el restaurante.
- */
-const menuSchema = new mongoose.Schema({
-    branch: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Branch',
-        required: [true, 'El menú debe estar vinculado a una sucursal']
-    },
-    companyId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Company',
-        required: [true, 'El menú debe pertenecer a una empresa']
-    },
-    name: {
-        type: String,
-        required: [true, 'El nombre del plato es obligatorio'],
-        trim: true,
-        maxLength: [100, 'El nombre no puede exceder los 100 caracteres']
-    },
-    description: {
-        type: String,
-        required: [true, 'La descripción es obligatoria'],
-        trim: true,
-        maxLength: [500, 'La descripción no puede exceder los 500 caracteres']
-    },
-    itemType: {
-        type: String,
-        enum: ['SINGLE', 'COMBO'],
-        required: [true, 'El tipo de item es obligatorio'],
-        default: 'SINGLE'
-    },
-    category: {
-        type: String,
-        required: [true, 'El tipo de plato (categoría) es obligatorio'],
-        enum: ['Entrada', 'Plato Fuerte', 'Postre', 'Bebida', 'Acompañamiento', 'Combo', 'Otro'],
-        message: '{ENUM} no es una categoría válida'
-    },
-    price: {
-        type: Number,
-        required: [true, 'El precio base es obligatorio'],
-        min: [0, 'El precio no puede ser negativo']
-    },
-    // Receta para items de tipo SINGLE
-    recipe: [{
-        ingredientId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Ingredient',
-            required: true
-        },
-        quantityRequired: {
-            type: Number,
-            required: true,
-            min: [0.01, 'La cantidad requerida debe ser mayor a cero']
-        }
-    }],
-    // Componentes para items de tipo COMBO
-    comboItems: [{
-        menuItemId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Menu',
-            required: true
-        },
-        quantity: {
-            type: Number,
-            required: true,
-            min: 1,
-            default: 1
-        }
-    }],
-    // Gestión de promociones y descuentos
-    promotion: {
-        isActive: { type: Boolean, default: false },
-        discountType: { type: String, enum: ['PERCENTAGE', 'FIXED_PRICE'] },
-        discountValue: { type: Number, min: 0 },
-        startsAt: { type: Date },
-        endsAt: { type: Date }
-    },
-    image: {
-        type: String,
-        default: 'menus/default_menu'
-    },
-    isActive: {
-        type: Boolean,
-        default: true
-    }
-}, { 
-    timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
-});
+const BOMComponentSchema = new mongoose.Schema({
+  componentId: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'recipe.componentType' },
+  componentType: { type: String, required: true, enum: ['Ingredient', 'Menu'] },
+  quantityRequired: { type: Number, required: true, min: 0.0001 }
+}, { _id: false });
+
+const MenuSchema = new mongoose.Schema({
+  companyId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
+  branchId: { type: mongoose.Schema.Types.ObjectId, required: false, index: true },
+  branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', index: true },
+  name: { type: String, required: true, trim: true },
+  description: { type: String, trim: true, maxLength: [500, 'La descripción no puede exceder los 500 caracteres'] },
+  sku: { type: String, required: true, unique: true },
+  price: { type: Number, required: true, min: 0 },
+  category: {
+    type: String,
+    enum: ['Entrada', 'Plato Fuerte', 'Postre', 'Bebida', 'Acompañamiento', 'Combo', 'Otro'],
+    default: 'Otro'
+  },
+  isSubRecipe: { type: Boolean, default: false, index: true },
+  recipe: [BOMComponentSchema],
+  promotion: {
+    isActive: { type: Boolean, default: false },
+    discountType: { type: String, enum: ['PERCENTAGE', 'FIXED_PRICE'] },
+    discountValue: { type: Number, min: 0 },
+    startsAt: { type: Date },
+    endsAt: { type: Date }
+  },
+  image: { type: String, default: 'menus/default_menu' },
+  isActive: { type: Boolean, default: true }
+}, { collection: 'menus', timestamps: true, autoIndex: false, toJSON: { virtuals: true }, toObject: { virtuals: true } });
+
+MenuSchema.index({ companyId: 1, sku: 1 });
 
 /**
  * Virtual que calcula el precio efectivo aplicando promociones si están activas y vigentes.
  */
-menuSchema.virtual('effectivePrice').get(function() {
-    const now = new Date();
-    
-    // Si no hay promoción activa o está fuera de vigencia, retornar precio base
-    if (!this.promotion || !this.promotion.isActive) return this.price;
-    if (this.promotion.startsAt && now < this.promotion.startsAt) return this.price;
-    if (this.promotion.endsAt && now > this.promotion.endsAt) return this.price;
+MenuSchema.virtual('effectivePrice').get(function() {
+  const now = new Date();
+  
+  if (!this.promotion || !this.promotion.isActive) return this.price;
+  if (this.promotion.startsAt && now < this.promotion.startsAt) return this.price;
+  if (this.promotion.endsAt && now > this.promotion.endsAt) return this.price;
 
-    if (this.promotion.discountType === 'PERCENTAGE') {
-        const discount = this.price * (this.promotion.discountValue / 100);
-        return Math.round((this.price - discount) * 100) / 100;
-    }
+  if (this.promotion.discountType === 'PERCENTAGE') {
+    const discount = this.price * (this.promotion.discountValue / 100);
+    return Math.round((this.price - discount) * 100) / 100;
+  }
 
-    if (this.promotion.discountType === 'FIXED_PRICE') {
-        return Math.max(0, this.price - this.promotion.discountValue);
-    }
+  if (this.promotion.discountType === 'FIXED_PRICE') {
+    return Math.max(0, this.price - this.promotion.discountValue);
+  }
 
-    return this.price;
+  return this.price;
 });
 
-/**
- * Hook de validación para asegurar la integridad de datos según el itemType.
- */
-menuSchema.pre('validate', function() {
-    if (this.itemType === 'COMBO') {
-        if (!this.comboItems || this.comboItems.length === 0) {
-            throw new Error('Un COMBO debe incluir al menos un item.');
-        }
-    }
+// Middleware protector de desbordamiento de pila (DFS anti-ciclos)  
+MenuSchema.pre('save', async function(next) {  
+  if (!this.isModified('recipe') || this.recipe.length === 0) return next();  
+  const currentMenuId = this._id.toString();  
+  const visited = new Set();
 
-    if (this.itemType === 'SINGLE') {
-        if (!this.recipe || this.recipe.length === 0) {
-            throw new Error('Un platillo SINGLE debe tener al menos un ingrediente en su receta.');
-        }
-    }
+  async function checkCycles(menuId) {  
+    if (menuId === currentMenuId) throw new Error('CIRCULAR_DEPENDENCY_DETECTED: Ciclo infinito en sub-recetas.');  
+    if (visited.has(menuId)) return;  
+    visited.add(menuId);  
+    const parentMenu = await mongoose.model('Menu').findById(menuId).lean();  
+    if (!parentMenu || !parentMenu.recipe) return;  
+    for (const child of parentMenu.recipe) {  
+      if (child.componentType === 'Menu') await checkCycles(child.componentId.toString());  
+    }  
+  }
+
+  try {  
+    for (const component of this.recipe) {  
+      if (component.componentType === 'Menu') await checkCycles(component.componentId.toString());  
+    }  
+    next();  
+  } catch (error) { next(error); }  
 });
 
-export default mongoose.model('Menu', menuSchema);
+export const Menu = mongoose.model('Menu', MenuSchema);
+export default Menu;
