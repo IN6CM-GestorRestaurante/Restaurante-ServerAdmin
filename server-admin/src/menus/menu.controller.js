@@ -72,9 +72,6 @@ export const createMenu = async (req, res, next) => {
     }
 };
 
-/**
- * Actualizar plato del menú.
- */
 export const updateMenu = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -82,9 +79,11 @@ export const updateMenu = async (req, res, next) => {
 
         if (req.file) {
             updateData.image = req.file.path;
+        } else if (req.body.removeImage === "true") {
+            updateData.image = 'menus/default_menu';
         }
 
-        const menu = await Menu.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+        const menu = await Menu.findByIdAndUpdate(id, updateData, { returnDocument: 'after', runValidators: true });
 
         res.status(200).json({
             success: true,
@@ -104,7 +103,7 @@ export const changeMenuStatus = async (req, res, next) => {
         const { id } = req.params;
         const isActive = req.url.includes('/activate');
         
-        const menu = await Menu.findByIdAndUpdate(id, { isActive }, { new: true });
+        const menu = await Menu.findByIdAndUpdate(id, { isActive }, { returnDocument: 'after' });
 
         res.status(200).json({
             success: true,

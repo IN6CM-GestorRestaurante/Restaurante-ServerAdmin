@@ -2,6 +2,7 @@ import { Router } from "express";
 import { createOrder, updateItemStatus, updateOrderStatus, getActiveOrdersByBranch, getOrderAuditLog } from "./order.controller.js";
 import { createOrderValidator, updateItemStatusValidator, updateOrderStatusValidator } from "../../middlewares/orders-validators.js";
 import { validateJWT, authorizeRole, checkOwnership } from "../../middlewares/auth.middleware.js";
+import { injectTenantContext } from "../../middlewares/tenant.middleware.js";
 
 const router = Router();
 
@@ -48,7 +49,7 @@ const router = Router();
  *       201:
  *         description: Orden creada exitosamente
  */
-router.post("/", validateJWT, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER', 'BRANCH_MANAGER'), createOrderValidator, createOrder);
+router.post("/", validateJWT, injectTenantContext, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER', 'BRANCH_MANAGER'), createOrderValidator, createOrder);
 
 /**
  * @swagger
@@ -66,7 +67,7 @@ router.post("/", validateJWT, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER
  *       200:
  *         description: rdenes activas
  */
-router.get("/branch/:branchId", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER', 'WAITER', 'RECEPTIONIST'), checkOwnership('BRANCH'), getActiveOrdersByBranch);
+router.get("/branch/:branchId", validateJWT, injectTenantContext, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER', 'WAITER', 'RECEPTIONIST'), checkOwnership('BRANCH'), getActiveOrdersByBranch);
 
 /**
  * @swagger
@@ -99,7 +100,7 @@ router.get("/branch/:branchId", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRA
  *       200:
  *         description: Platillo actualizado
  */
-router.patch("/:orderId/item/:itemId/status", validateJWT, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER', 'BRANCH_MANAGER'), updateItemStatusValidator, updateItemStatus);
+router.patch("/:orderId/item/:itemId/status", validateJWT, injectTenantContext, authorizeRole('COMPANY_ADMIN', 'WAITRESS', 'WAITER', 'BRANCH_MANAGER'), updateItemStatusValidator, updateItemStatus);
 
 /**
  * @swagger
@@ -127,7 +128,7 @@ router.patch("/:orderId/item/:itemId/status", validateJWT, authorizeRole('COMPAN
  *       200:
  *         description: Estado general actualizado
  */
-router.patch("/:id/status", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), updateOrderStatusValidator, updateOrderStatus);
+router.patch("/:id/status", validateJWT, injectTenantContext, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), updateOrderStatusValidator, updateOrderStatus);
 
 /**
  * @swagger
@@ -145,6 +146,6 @@ router.patch("/:id/status", validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_
  *       200:
  *         description: Historial de auditoría devuelto exitosamente
  */
-router.get('/:orderId/audit', validateJWT, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'), getOrderAuditLog);
+router.get('/:orderId/audit', validateJWT, injectTenantContext, authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN', 'BRANCH_MANAGER'), getOrderAuditLog);
 
 export default router;

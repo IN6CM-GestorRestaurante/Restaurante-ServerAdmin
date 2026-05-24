@@ -70,7 +70,7 @@ export const createOrder = async (req, res) => {
                 description: `Orden creada con ${items.length} ítems en mesa(s) ${tables.join(', ')}`
             },
             branchId:  branch,
-            companyId: req.body.companyId || req.user.companyId,
+            companyId: req.companyId || req.body.companyId || req.user?.companyId,
             ipAddress: req.ip
         }]);
 
@@ -132,7 +132,7 @@ export const updateItemStatus = async (req, res) => {
                 description:    `Ítem cambió de "${previousStatus}" a "${nextStatus}"`
             },
             branchId:  order.branch,
-            companyId: req.user.companyId,
+            companyId: req.companyId || req.user?.companyId,
             ipAddress: req.ip
         });
 
@@ -199,7 +199,7 @@ export const updateOrderStatus = async (req, res) => {
                     : `Estado de orden cambió de "${previousStatus}" a "${nextStatus}"`
             },
             branchId:  order.branch,
-            companyId: req.user.companyId,
+            companyId: req.companyId || req.user?.companyId,
             ipAddress: req.ip
         });
 

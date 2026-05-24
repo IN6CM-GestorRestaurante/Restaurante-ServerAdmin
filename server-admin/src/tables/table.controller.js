@@ -73,7 +73,7 @@ export const createTable = async (req, res, next) => {
 export const updateTable = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const table = await Table.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+        const table = await Table.findByIdAndUpdate(id, req.body, { returnDocument: 'after', runValidators: true });
 
         res.status(200).json({
             success: true,
@@ -93,7 +93,7 @@ export const changeTableStatus = async (req, res, next) => {
         const { id } = req.params;
         const isActive = req.url.includes('/activate');
         
-        const table = await Table.findByIdAndUpdate(id, { isActive }, { new: true });
+        const table = await Table.findByIdAndUpdate(id, { isActive }, { returnDocument: 'after' });
 
         res.status(200).json({
             success: true,

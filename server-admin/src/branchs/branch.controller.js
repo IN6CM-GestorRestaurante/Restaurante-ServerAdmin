@@ -92,10 +92,12 @@ export const updateBranch = async (req, res, next) => {
 
         if (req.file) {
             updateData.photos = [req.file.path];
+        } else if (req.body.removePhoto === "true") {
+            updateData.photos = ['photos/default_photos_logo'];
         }
 
         const branch = await Branch.findByIdAndUpdate(id, updateData, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         });
 
@@ -117,7 +119,7 @@ export const changeBranchStatus = async (req, res, next) => {
         const { id } = req.params;
         const isActive = req.url.includes('/activate');
         
-        const branch = await Branch.findByIdAndUpdate(id, { isActive }, { new: true });
+        const branch = await Branch.findByIdAndUpdate(id, { isActive }, { returnDocument: 'after' });
 
         res.status(200).json({
             success: true,

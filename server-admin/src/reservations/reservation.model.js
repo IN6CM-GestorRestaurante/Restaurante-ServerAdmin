@@ -3,44 +3,27 @@
 import mongoose from 'mongoose';
 
 const reservationSchema = new mongoose.Schema({
-    user: {
+    guestName: {
         type: String,
-        required: [true, 'El usuario que realiza la reserva es obligatorio']
+        required: [true, 'El nombre del cliente es obligatorio']
     },
     branch: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
         required: [true, 'La sucursal es obligatoria']
     },
-    type: {
-        type: String,
-        required: [true, 'El tipo de reservación es obligatorio'],
-        enum: ['En Mesa', 'Para llevar', 'A domicilio'],
-        default: 'En Mesa'
+    guestsCount: {
+        type: Number,
+        required: [true, 'El número de personas es obligatorio'],
+        min: [1, 'Al menos debe ser una persona']
     },
-    table: {
+    tables: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Table',
-        required: function() { return this.type === 'En Mesa'; }
-    },
-    items: [{
-        menuItem: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Menu'
-        },
-        quantity: {
-            type: Number,
-            min: [1, 'La cantidad mínima es 1']
-        }
+        ref: 'Table'
     }],
     date: {
         type: Date,
         required: [true, 'La fecha y hora de la reservación es obligatoria']
-    },
-    deliveryAddress: {
-        type: String,
-        trim: true,
-        required: function() { return this.type === 'A domicilio'; }
     },
     status: {
         type: String,
