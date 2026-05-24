@@ -11,6 +11,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
 import { errorHandlerGlobal } from '../middlewares/handle-errors.js';
 import { antiCsrfGuard } from '../middlewares/auth.middleware.js';
+import csrfEnforcer from '../middlewares/csrf-enforcer.middleware.js';
 
 //Rutas
 import tablesRoutes from '../src/tables/table.routes.js';
@@ -23,6 +24,7 @@ import ingredientRoutes from '../src/ingredients/ingredient.routes.js';
 import stockRoutes from '../src/stocks/stock.routes.js'; 
 import invoiceRoutes from '../src/invoices/invoice.routes.js';
 
+
 const BASE_URL = '/api/v1';
 
 //Configuración de mi aplicación
@@ -34,6 +36,7 @@ const middlewares = (app) => {
     app.use(cors(corsOptions));
     app.use(cookieParser());
     app.use(antiCsrfGuard);
+    app.use(csrfEnforcer);
     app.use(morgan('dev'));
 }
 
@@ -49,6 +52,7 @@ const routes = (app) => {
     app.use(`${BASE_URL}/reservations`, reservationsRoutes);
     app.use(`${BASE_URL}/orders`, orderRoutes);
     app.use(`${BASE_URL}/invoices`, invoiceRoutes);
+
 }
 
 //FUNDIC“N PARA INICIAR EL SERVIDOR

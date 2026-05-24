@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
  */
 export const validateJWT = async (req, res, next) => {
     try {
-        const token = req.cookies['X-Auth-Token'];
+        const token = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1];
         if (!token) {
             return res.status(401).json({ success: false, message: 'Falta token de acceso' });
         }
@@ -103,7 +103,7 @@ export const antiCsrfGuard = (req, res, next) => {
   if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
     const customHeader = req.headers['x-requested-with'];
     if (!customHeader || customHeader !== 'XMLHttpRequest') {
-      return res.status(403).json({ error: 'CSRF_VIOLATION_ATTEMPT_BLOCKED: Cabecera de validación ausente.' });
+      return res.status(403).json({ error: 'SECURITY_VIOLATION_CSRF_GUARD_TRIGGERED: Petición trans-origen bloqueada.' });
     }
   }
   next();
