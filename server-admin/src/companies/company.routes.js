@@ -1,6 +1,15 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { registerCompanyAndUser, getCompanies, getCompanyById } from './company.controller.js';
+import { 
+    registerCompanyAndUser, 
+    getCompanies, 
+    getCompanyById,
+    getCompanyEmployeesProxy,
+    getCompanyEmployeeByIdProxy,
+    createCompanyEmployeeProxy,
+    updateCompanyEmployeeProxy,
+    changeCompanyEmployeeStatusProxy
+} from './company.controller.js';
 import { registerCompanyValidator } from '../../middlewares/companies-validators.js';
 import { validateJWT, authorizeRole } from '../../middlewares/auth.middleware.js';
 
@@ -46,6 +55,14 @@ router.post(
  *       - bearerAuth: []
  */
 router.get('/', validateJWT, authorizeRole('SUPER_ADMIN'), getCompanies);
+
+// ================= EMPLOYEES / USERS PROXIES =================
+router.get('/employees', validateJWT, getCompanyEmployeesProxy);
+router.post('/employees', validateJWT, createCompanyEmployeeProxy);
+router.get('/employees/:id', validateJWT, getCompanyEmployeeByIdProxy);
+router.put('/employees/:id', validateJWT, updateCompanyEmployeeProxy);
+router.put('/employees/:id/activate', validateJWT, changeCompanyEmployeeStatusProxy);
+router.put('/employees/:id/desactivate', validateJWT, changeCompanyEmployeeStatusProxy);
 
 /**
  * @swagger

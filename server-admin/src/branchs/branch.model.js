@@ -68,6 +68,11 @@ const branchSchema = new mongoose.Schema({
         trim: true,
         match: [/^\+?[1-9]\d{1,14}$/, 'Por favor ingrese un número de teléfono válido']
     },
+    state: {
+        type: String,
+        enum: ['Operativa', 'En mantenimiento', 'Cerrada'],
+        default: 'Operativa'
+    },
     isActive: {
         type: Boolean,
         default: true

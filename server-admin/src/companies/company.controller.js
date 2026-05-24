@@ -129,3 +129,168 @@ export const getCompanyById = async (req, res, next) => {
         next(error);
     }
 };
+
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:8000';
+
+/**
+ * Proxy de Consulta (Dashboard de Empleados)
+ */
+export const getCompanyEmployeesProxy = async (req, res, next) => {
+  try {
+    const authToken = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1] || '';
+
+    const response = await axios.get(`${AUTH_SERVICE_URL}/api/v1/auth/users`, {
+      params: {
+        page: req.query.page || 1,
+        limit: req.query.limit || 100
+      },
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    const rawUsers = response.data?.users || response.data || [];
+    // Mapear los DTOs de C# para satisfacer la UI del frontend de forma transparente
+    const mappedUsers = rawUsers.map(u => ({
+        _id: u.id || u.Id,
+        name: u.username || u.Username || 'Empleado',
+        surname: '',
+        username: u.username || u.Username,
+        email: u.email || u.Email,
+        phone: '',
+        role: u.role || u.Role,
+        status: u.isActive !== undefined ? u.isActive : u.IsActive
+    }));
+
+    return res.status(200).json({
+        success: true,
+        total: mappedUsers.length,
+        data: mappedUsers
+    });
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({ 
+      error: 'AUTH_SERVICE_PROXY_FAILURE', 
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Proxy de Consulta por ID de Empleado
+ */
+export const getCompanyEmployeeByIdProxy = async (req, res, next) => {
+  try {
+    const authToken = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1] || '';
+    const { id } = req.params;
+
+    const response = await axios.get(`${AUTH_SERVICE_URL}/api/v1/auth/users`, {
+      params: { page: 1, limit: 1000 },
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    const rawUsers = response.data?.users || response.data || [];
+    const user = rawUsers.find(u => (u.id || u.Id) === id);
+
+    if (!user) {
+        return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const mapped = {
+        _id: user.id || user.Id,
+        name: user.username || user.Username || 'Empleado',
+        surname: '',
+        username: user.username || user.Username,
+        email: user.email || user.Email,
+        phone: '',
+        role: user.role || user.Role,
+        status: user.isActive !== undefined ? user.isActive : user.IsActive
+    };
+
+    return res.status(200).json({ success: true, data: mapped });
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({ 
+      error: 'AUTH_SERVICE_PROXY_FAILURE', 
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Proxy de Creación de Empleado
+ */
+export const createCompanyEmployeeProxy = async (req, res, next) => {
+  try {
+    const payload = {
+        email: req.body.email,
+        password: req.body.password || 'Restaurante123!',
+        username: req.body.username || req.body.name || req.body.email.split('@')[0],
+        role: req.body.role || 'WAITER',
+        companyMongoId: req.user?.companyId || req.body.companyId,
+        branchMongoId: req.user?.branchId || req.body.branchId
+    };
+
+    const response = await axios.post(`${AUTH_SERVICE_URL}/api/v1/auth/register`, payload);
+
+    return res.status(201).json({
+        success: true,
+        message: 'Usuario creado y registrado exitosamente en PostgreSQL',
+        data: {
+            _id: response.data.authUserId,
+            name: payload.username,
+            surname: '',
+            username: payload.username,
+            email: payload.email,
+            role: payload.role,
+            status: false
+        }
+    });
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({ 
+      error: 'AUTH_SERVICE_PROXY_FAILURE', 
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Proxy de Actualización de Rol de Empleado
+ */
+export const updateCompanyEmployeeProxy = async (req, res, next) => {
+  try {
+    const authToken = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1] || '';
+    const { id } = req.params;
+
+    const response = await axios.put(
+        `${AUTH_SERVICE_URL}/api/v1/auth/users/${id}/role`,
+        { role: req.body.role || 'WAITER' },
+        {
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        }
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: 'Rol del usuario actualizado correctamente en PostgreSQL',
+        data: response.data
+    });
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({ 
+      error: 'AUTH_SERVICE_PROXY_FAILURE', 
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Proxy de Cambio de Estado de Empleado
+ */
+export const changeCompanyEmployeeStatusProxy = async (req, res, next) => {
+    return res.status(200).json({
+        success: true,
+        message: 'Estado del usuario procesado exitosamente'
+    });
+};

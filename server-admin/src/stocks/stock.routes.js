@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getStocks, createOrUpdateStock } from './stock.controller.js';
 import { validateJWT, authorizeRole, checkOwnership } from '../../middlewares/auth.middleware.js';
+import { injectTenantContext } from '../../middlewares/tenant.middleware.js';
 
 const router = Router();
 
@@ -23,7 +24,7 @@ const router = Router();
  *       200:
  *         description: Inventario obtenido exitosamente
  */
-router.get('/', validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), getStocks);
+router.get('/', validateJWT, injectTenantContext, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), getStocks);
 
 /**
  * @swagger
@@ -37,6 +38,6 @@ router.get('/', validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), g
  *       200:
  *         description: Inventario modificado
  */
-router.post('/', validateJWT, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), checkOwnership('BRANCH'), createOrUpdateStock);
+router.post('/', validateJWT, injectTenantContext, authorizeRole('COMPANY_ADMIN', 'BRANCH_MANAGER'), checkOwnership('BRANCH'), createOrUpdateStock);
 
 export default router;

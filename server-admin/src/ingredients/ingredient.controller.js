@@ -62,7 +62,7 @@ export const createIngredient = async (req, res, next) => {
 export const updateIngredient = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const ingredient = await Ingredient.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+        const ingredient = await Ingredient.findByIdAndUpdate(id, req.body, { returnDocument: 'after', runValidators: true });
 
         res.status(200).json({ 
             success: true, 
@@ -82,7 +82,7 @@ export const changeIngredientStatus = async (req, res, next) => {
         const { id } = req.params;
         const isActive = req.url.includes('/activate');
         
-        const ingredient = await Ingredient.findByIdAndUpdate(id, { isActive }, { new: true });
+        const ingredient = await Ingredient.findByIdAndUpdate(id, { isActive }, { returnDocument: 'after' });
 
         res.status(200).json({
             success: true,
