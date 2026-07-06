@@ -26,7 +26,7 @@ const MenuSchema = new mongoose.Schema({
   recipe: [BOMComponentSchema],
   promotion: {
     isActive: { type: Boolean, default: false },
-    discountType: { type: String, enum: ['PERCENTAGE', 'FIXED_PRICE'] },
+    discountType: { type: String, enum: ['PERCENTAGE', 'FIXED_PRICE', 'FIXED', 'PORCENTAJE', 'FIJO'] },
     discountValue: { type: Number, min: 0 },
     startsAt: { type: Date },
     endsAt: { type: Date }
@@ -44,16 +44,28 @@ MenuSchema.virtual('effectivePrice').get(function() {
   const now = new Date();
   
   if (!this.promotion || !this.promotion.isActive) return this.price;
-  if (this.promotion.startsAt && now < this.promotion.startsAt) return this.price;
-  if (this.promotion.endsAt && now > this.promotion.endsAt) return this.price;
+  
+  if (this.promotion.startsAt) {
+    const start = new Date(this.promotion.startsAt);
+    start.setHours(0, 0, 0, 0);
+    if (now < start) return this.price;
+  }
+  if (this.promotion.endsAt) {
+    const end = new Date(this.promotion.endsAt);
+    end.setHours(23, 59, 59, 999);
+    if (now > end) return this.price;
+  }
 
-  if (this.promotion.discountType === 'PERCENTAGE') {
-    const discount = this.price * (this.promotion.discountValue / 100);
+  const dtype = (this.promotion.discountType || '').toUpperCase();
+  const val = Number(this.promotion.discountValue) || 0;
+
+  if (dtype === 'PERCENTAGE' || dtype === 'PORCENTAJE') {
+    const discount = this.price * (val / 100);
     return Math.round((this.price - discount) * 100) / 100;
   }
 
-  if (this.promotion.discountType === 'FIXED_PRICE') {
-    return Math.max(0, this.price - this.promotion.discountValue);
+  if (dtype === 'FIXED_PRICE' || dtype === 'FIXED' || dtype === 'FIJO') {
+    return Math.max(0, Math.round((this.price - val) * 100) / 100);
   }
 
   return this.price;

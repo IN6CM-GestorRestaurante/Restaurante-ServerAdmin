@@ -54,10 +54,11 @@ const flattenOrderItems = async (items, session = null, visited = new Set()) => 
             }
             visited.add(menuId);
 
-            // Desempaquetar: cada comboItem se multiplica por la quantity del combo
-            const subItems = menu.comboItems.map(ci => ({
-                menuItem: ci.menuItemId,
-                quantity: ci.quantity * item.quantity
+            // Desempaquetar: los ítems del combo están en recipe con componentType === 'Menu'
+            const comboComponents = (menu.recipe || []).filter(r => r.componentType === 'Menu');
+            const subItems = comboComponents.map(ci => ({
+                menuItem: ci.componentId,
+                quantity: ci.quantityRequired * item.quantity
             }));
 
             // Recursión: un combo podría contener otro combo
@@ -108,7 +109,7 @@ const processStockUpdate = async (branchId, items, mode = 'DEDUCT') => {
         const menuItemIds = flatItems.map(i => i.menuItem);
         const menusQuery = Menu.find({ _id: { $in: menuItemIds } })
             .select('name recipe')
-            .populate('recipe.ingredientId', 'name unit');
+            .populate('recipe.componentId', 'name unit');
             
         if (session) menusQuery.session(session);
         const menus = await menusQuery;
@@ -120,11 +121,12 @@ const processStockUpdate = async (branchId, items, mode = 'DEDUCT') => {
             if (!menu || !menu.recipe?.length) continue;
 
             for (const recipeItem of menu.recipe) {
-                const ingId = recipeItem.ingredientId._id.toString();
+                if (recipeItem.componentType !== 'Ingredient' || !recipeItem.componentId) continue;
+                const ingId = recipeItem.componentId._id ? recipeItem.componentId._id.toString() : recipeItem.componentId.toString();
                 const needed = recipeItem.quantityRequired * item.quantity;
                 const current = demand.get(ingId) || { 
                     totalAmount: 0, 
-                    name: recipeItem.ingredientId.name 
+                    name: recipeItem.componentId.name || 'Ingrediente'
                 };
                 current.totalAmount += needed;
                 demand.set(ingId, current);

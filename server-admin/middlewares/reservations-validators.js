@@ -4,53 +4,41 @@ import {body, param} from 'express-validator';
 import {checkValidators} from "./check-validators.js";
 
 export const validateCreateReservation = [
-    body('user')
+    body('guestName')
         .notEmpty()
-        .withMessage('El ID del usuario es obligatorio')
-        .isMongoId()
-        .withMessage('No es un ID de usuario válido'),
+        .withMessage('El nombre del cliente es obligatorio')
+        .trim(),
     body('branch')
         .notEmpty()
         .withMessage('El ID de la sucursal es obligatorio')
         .isMongoId()
         .withMessage('No es un ID de sucursal válido'),
-    body('type')
+    body('guestsCount')
         .notEmpty()
-        .withMessage('El tipo de reservación es obligatorio')
-        .isIn(['En Mesa', 'Para llevar', 'A domicilio'])
-        .withMessage('Tipo de reservación no válido'),
+        .withMessage('El número de comensales es obligatorio')
+        .isInt({ min: 1 })
+        .withMessage('Debe ser al menos 1 comensal'),
     body('date')
         .notEmpty()
         .withMessage('La fecha y hora son obligatorias')
         .isISO8601()
         .withMessage('Formato de fecha inválido (debe ser ISO8601)'),
-    body('table')
-        .if(body('type').equals('En Mesa'))
-        .notEmpty()
-        .withMessage('La mesa es obligatoria para reservaciones en el local')
-        .isMongoId()
-        .withMessage('No es un ID de mesa válido'),
-    body('deliveryAddress')
-        .if(body('type').equals('A domicilio'))
-        .notEmpty()
-        .withMessage('La dirección de entrega es obligatoria para pedidos a domicilio')
-        .trim(),
-    body('items')
+    body('tables')
         .optional()
         .isArray()
-        .withMessage('Los ítems deben ser un arreglo'),
-    body('items.*.menuItem')
-        .if(body('items').exists())
+        .withMessage('Las mesas deben ser un arreglo'),
+    body('tables.*')
+        .if(body('tables').exists())
         .isMongoId()
-        .withMessage('ID de producto del menú no válido'),
-    body('items.*.quantity')
-        .if(body('items').exists())
-        .isInt({min: 1})
-        .withMessage('La cantidad mínima por producto es 1'),
+        .withMessage('ID de mesa no válido'),
     body('status')
         .optional()
         .isIn(['Pendiente', 'Confirmada', 'En curso', 'Completada', 'Cancelada'])
         .withMessage('Estado de reservación no válido'),
+    body('notes')
+        .optional()
+        .isString()
+        .withMessage('Las notas deben ser texto'),
     checkValidators
 ];
 
@@ -60,18 +48,37 @@ export const validateUpdateReservation = [
         .withMessage('El ID de la reservación es obligatorio')
         .isMongoId()
         .withMessage('No es un ID de MongoDB válido'),
+    body('guestName')
+        .optional()
+        .trim(),
+    body('branch')
+        .optional()
+        .isMongoId()
+        .withMessage('No es un ID de sucursal válido'),
+    body('guestsCount')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Debe ser al menos 1 comensal'),
     body('date')
         .optional()
         .isISO8601()
         .withMessage('Formato de fecha inválido'),
+    body('tables')
+        .optional()
+        .isArray()
+        .withMessage('Las mesas deben ser un arreglo'),
+    body('tables.*')
+        .if(body('tables').exists())
+        .isMongoId()
+        .withMessage('ID de mesa no válido'),
     body('status')
         .optional()
         .isIn(['Pendiente', 'Confirmada', 'En curso', 'Completada', 'Cancelada'])
         .withMessage('Estado no válido'),
-    body('type')
+    body('notes')
         .optional()
-        .isIn(['En Mesa', 'Para llevar', 'A domicilio'])
-        .withMessage('Tipo no válido'),
+        .isString()
+        .withMessage('Las notas deben ser texto'),
     checkValidators
 ];
 

@@ -35,6 +35,10 @@ export const registerCompanyAndUser = async (req, res, next) => {
                 email: req.body.email, 
                 password: req.body.password,
                 username: req.body.username || undefined,
+                name: req.body.name || undefined,
+                surname: req.body.surname || undefined,
+                phone: req.body.phone || undefined,
+                isActive: true,
                 companyMongoId: companyId.toString(),
                 role: 'COMPANY_ADMIN'
             },
@@ -237,13 +241,13 @@ export const getCompanyEmployeesProxy = async (req, res, next) => {
     // Mapear los DTOs de C# para satisfacer la UI del frontend de forma transparente
     const mappedUsers = rawUsers.map(u => ({
         _id: u.id || u.Id,
-        name: u.username || u.Username || 'Empleado',
-        surname: '',
-        username: u.username || u.Username,
-        email: u.email || u.Email,
-        phone: '',
+        name: u.name || u.Name || u.username || u.Username || 'Empleado',
+        surname: u.surname || u.Surname || '',
+        username: u.username || u.Username || '',
+        email: u.email || u.Email || '',
+        phone: u.phone || u.Phone || '',
         role: u.role || u.Role,
-        status: u.isActive !== undefined ? u.isActive : u.IsActive
+        status: u.isActive !== undefined ? u.isActive : (u.IsActive !== undefined ? u.IsActive : true)
     }));
 
     return res.status(200).json({
@@ -283,13 +287,13 @@ export const getCompanyEmployeeByIdProxy = async (req, res, next) => {
 
     const mapped = {
         _id: user.id || user.Id,
-        name: user.username || user.Username || 'Empleado',
-        surname: '',
-        username: user.username || user.Username,
-        email: user.email || user.Email,
-        phone: '',
+        name: user.name || user.Name || user.username || user.Username || 'Empleado',
+        surname: user.surname || user.Surname || '',
+        username: user.username || user.Username || '',
+        email: user.email || user.Email || '',
+        phone: user.phone || user.Phone || '',
         role: user.role || user.Role,
-        status: user.isActive !== undefined ? user.isActive : user.IsActive
+        status: user.isActive !== undefined ? user.isActive : (user.IsActive !== undefined ? user.IsActive : true)
     };
 
     return res.status(200).json({ success: true, data: mapped });
@@ -306,34 +310,47 @@ export const getCompanyEmployeeByIdProxy = async (req, res, next) => {
  */
 export const createCompanyEmployeeProxy = async (req, res, next) => {
   try {
+    const authToken = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1] || '';
     const payload = {
+        name: req.body.name,
+        surname: req.body.surname,
+        phone: req.body.phone,
         email: req.body.email,
         password: req.body.password || 'Restaurante123!',
         username: req.body.username || undefined,
         role: req.body.role || 'WAITER',
+        isActive: req.body.status !== undefined ? req.body.status : true,
         companyMongoId: req.user?.companyId || req.body.companyId,
         branchMongoId: req.user?.branchId || req.body.branchId
     };
 
-    const response = await axios.post(`${AUTH_SERVICE_URL}/api/v1/auth/register`, payload);
+    const response = await axios.post(`${AUTH_SERVICE_URL}/api/v1/auth/register`, payload, {
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+        }
+    });
 
     return res.status(201).json({
         success: true,
         message: 'Usuario creado y registrado exitosamente en PostgreSQL',
         data: {
             _id: response.data.authUserId,
-            name: payload.username,
-            surname: '',
+            name: payload.name || payload.username,
+            surname: payload.surname || '',
             username: payload.username,
             email: payload.email,
+            phone: payload.phone || '',
             role: payload.role,
-            status: false
+            status: payload.isActive
         }
     });
   } catch (error) {
+    const errorData = error.response?.data || {};
     return res.status(error.response?.status || 500).json({ 
-      error: 'AUTH_SERVICE_PROXY_FAILURE', 
-      details: error.message 
+      error: errorData.error || 'AUTH_SERVICE_PROXY_FAILURE', 
+      message: errorData.message || error.message,
+      errors: errorData.errors || undefined,
+      details: errorData.details || error.message 
     });
   }
 };
@@ -346,33 +363,33 @@ export const updateCompanyEmployeeProxy = async (req, res, next) => {
   try {
     const authToken = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1] || '';
     const { id } = req.params;
-    const { role, email, password, username, name, surname, phone } = req.body;
+    const { role, email, password, username, name, surname, phone, status } = req.body;
 
-    // 1. Update role if provided
-    if (role) {
-        await axios.put(
-            `${AUTH_SERVICE_URL}/api/v1/auth/users/${id}/role`,
-            { role },
-            {
-                headers: {
-                    Authorization: `Bearer ${authToken}`
-                }
+    const payload = {};
+    if (name !== undefined) payload.name = name;
+    if (surname !== undefined) payload.surname = surname;
+    if (phone !== undefined) payload.phone = phone;
+    if (username !== undefined) payload.username = username;
+    if (role !== undefined) payload.role = role;
+    if (password !== undefined && String(password).trim().length > 0) payload.password = password;
+    if (status !== undefined) payload.isActive = status;
+
+    await axios.put(
+        `${AUTH_SERVICE_URL}/api/v1/auth/users/${id}`,
+        payload,
+        {
+            headers: {
+                Authorization: `Bearer ${authToken}`
             }
-        );
-    }
-
-    // Note: The auth-service currently only supports role updates via PUT /users/{id}/role.
-    // Email, password, and other profile changes would require new endpoints in the C# auth-service.
-    // For now, we acknowledge the update and return success for the fields we can update.
+        }
+    );
 
     return res.status(200).json({
         success: true,
         message: 'Usuario actualizado correctamente',
         data: {
             _id: id,
-            role: role || undefined,
-            email: email || undefined,
-            username: username || undefined
+            role, email, username, name, surname, phone, status
         }
     });
   } catch (error) {
@@ -388,8 +405,38 @@ export const updateCompanyEmployeeProxy = async (req, res, next) => {
  * Proxy de Cambio de Estado de Empleado
  */
 export const changeCompanyEmployeeStatusProxy = async (req, res, next) => {
+  try {
+    const authToken = req.cookies['X-Auth-Token'] || req.headers['authorization']?.split(' ')[1] || '';
+    const { id } = req.params;
+    let isActive = true;
+    if (req.url.includes('/desactivate')) isActive = false;
+    else if (req.url.includes('/activate')) isActive = true;
+    else if (req.body && req.body.status !== undefined) {
+      if (typeof req.body.status === 'boolean') isActive = req.body.status;
+      else if (String(req.body.status).toLowerCase() === 'inactivo' || String(req.body.status).toLowerCase() === 'false') isActive = false;
+      else isActive = true;
+    }
+
+    await axios.put(
+        `${AUTH_SERVICE_URL}/api/v1/auth/users/${id}`,
+        { isActive },
+        {
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        }
+    );
+
     return res.status(200).json({
         success: true,
-        message: 'Estado del usuario procesado exitosamente'
+        message: 'Estado del usuario actualizado exitosamente',
+        data: { _id: id, status: isActive }
     });
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({ 
+      error: 'AUTH_SERVICE_PROXY_FAILURE', 
+      message: error.response?.data?.message || error.message,
+      details: error.message 
+    });
+  }
 };

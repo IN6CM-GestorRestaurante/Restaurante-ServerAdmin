@@ -34,6 +34,22 @@ const parseMenuJsonFields = (req, res, next) => {
         if (req.body.promotion && typeof req.body.promotion === 'string') {
             req.body.promotion = JSON.parse(req.body.promotion);
         }
+        if (req.body.promotion && typeof req.body.promotion === 'object') {
+            if (req.body.promotion.discountType === 'FIXED' || req.body.promotion.discountType === 'Fijo' || req.body.promotion.discountType === 'fijo') {
+                req.body.promotion.discountType = 'FIXED_PRICE';
+            }
+            if (req.body.promotion.discountValue !== undefined && req.body.promotion.discountValue !== "") {
+                req.body.promotion.discountValue = Number(req.body.promotion.discountValue) || 0;
+            } else {
+                req.body.promotion.discountValue = 0;
+            }
+            if (!req.body.promotion.startsAt || req.body.promotion.startsAt === "") {
+                delete req.body.promotion.startsAt;
+            }
+            if (!req.body.promotion.endsAt || req.body.promotion.endsAt === "") {
+                delete req.body.promotion.endsAt;
+            }
+        }
 
         // Map frontend recipe format (ingredientId) to BOM Schema (componentId, componentType: 'Ingredient')
         if (Array.isArray(req.body.recipe)) {

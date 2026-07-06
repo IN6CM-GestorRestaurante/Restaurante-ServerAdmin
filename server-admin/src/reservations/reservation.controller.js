@@ -145,7 +145,7 @@ export const changeReservationStatus = async (req, res) => {
  * Algoritmo combinatorio inteligente de asignación de mesas por capacidad de comensales.
  */
 export const getSmartTableAllocation = async (req, res) => {
-  const { branchId, guestsCount } = req.query;
+  const { branchId, guestsCount, location, date, time } = req.query;
   const neededCapacity = parseInt(guestsCount, 10);
 
   if (!branchId || isNaN(neededCapacity)) {
@@ -153,17 +153,43 @@ export const getSmartTableAllocation = async (req, res) => {
   }
 
   try {
-    // Extraer mesas operacionales de la sucursal bajo aislamiento Multi-Tenant con estado 'Disponible'
-    const availableTables = await Table.find({
+    const filter = {
       branch: branchId,
       status: 'Disponible',
       isActive: true
-    }).sort({ capacity: 1 }).lean();
+    };
+
+    if (location && location !== 'Todos' && location !== '') {
+      filter.location = location;
+    }
+
+    let availableTables = await Table.find(filter).sort({ capacity: 1 }).lean();
+
+    // Filtrar por horario si se especifica fecha
+    if (date) {
+      const d = new Date(date);
+      if (!isNaN(d.getTime())) {
+        const DAYS_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const dayNameLocal = DAYS_ES[d.getDay()];
+        const dayNameUTC = DAYS_ES[d.getUTCDay()];
+
+        availableTables = availableTables.filter(t => {
+          if (!t.availabilitySchedules || t.availabilitySchedules.length === 0) return true;
+          return t.availabilitySchedules.some(s => s.day === dayNameLocal || s.day === dayNameUTC || !s.day);
+        });
+      }
+    }
 
     // Caso A: Asignación Directa de Mesa Óptima
     const optimalSingleTable = availableTables.find(t => t.capacity >= neededCapacity);
     if (optimalSingleTable) {
-      return res.status(200).json({ strategy: 'SINGLE_TABLE', allocation: [optimalSingleTable] });
+      return res.status(200).json({
+        success: true,
+        strategy: 'SINGLE_TABLE',
+        availableTables: availableTables,
+        allocatedTables: [optimalSingleTable],
+        allocation: [optimalSingleTable]
+      });
     }
 
     // Caso B: Algoritmo Combinatorio Dinámico (Suma de capacidades por proximidad espacial)
@@ -176,11 +202,13 @@ export const getSmartTableAllocation = async (req, res) => {
       if (currentCapacity >= neededCapacity) break;
     }
 
-    if (currentCapacity < neededCapacity) {
-      return res.status(404).json({ error: 'RESERVATION_DENIED_INSUFFICIENT_COMBINED_CAPACITY' });
-    }
-
-    return res.status(200).json({ strategy: 'COMBINED_TABLES', allocation: allocatedSuite });
+    return res.status(200).json({
+      success: true,
+      strategy: currentCapacity >= neededCapacity ? 'COMBINED_TABLES' : 'PARTIAL_COMBINATION',
+      availableTables: availableTables,
+      allocatedTables: currentCapacity >= neededCapacity ? allocatedSuite : [],
+      allocation: currentCapacity >= neededCapacity ? allocatedSuite : []
+    });
 
   } catch (error) {
     return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR', details: error.message });
