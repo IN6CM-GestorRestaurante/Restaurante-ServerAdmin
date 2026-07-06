@@ -41,8 +41,7 @@ const branchSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, 'La categoría gastronómica es obligatoria'],
-        enum: ['Italiana', 'Mexicana', 'Japonesa', 'Casera', 'Comida Rápida', 'Vegetariana', 'Mariscos', 'China', 'Otros'],
-        message: '{ENUM} no es una categoría válida'
+        trim: true
     },
     averagePrice: {
         type: Number,
@@ -66,7 +65,7 @@ const branchSchema = new mongoose.Schema({
         required: [true, 'El número de teléfono es obligatorio'],
         unique: true,
         trim: true,
-        match: [/^\+?[1-9]\d{1,14}$/, 'Por favor ingrese un número de teléfono válido']
+        match: [/^\+?\d{6,15}$/, 'Por favor ingrese un número de teléfono válido']
     },
     state: {
         type: String,

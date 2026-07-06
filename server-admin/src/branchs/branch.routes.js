@@ -23,6 +23,16 @@ import Branch from "./branch.model.js";
 const router = Router();
 const auth = [validateJWT, injectTenantContext];
 
+const safeUploadBranchImage = (req, res, next) => {
+    uploadBranchImage.single('photos')(req, res, (err) => {
+        if (err) {
+            console.warn("[Cloudinary Warning] Falla en subida de imagen, continuando sin imagen:", err.message);
+            return next();
+        }
+        next();
+    });
+};
+
 /**
  * @swagger
  * tags:
@@ -46,7 +56,7 @@ router.get('/:id',
 router.post('/', 
     ...auth, 
     authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
-    uploadBranchImage.single('photos'), 
+    safeUploadBranchImage, 
     validateCreateBranch, 
     createBranch
 );
@@ -54,7 +64,7 @@ router.post('/',
 router.put('/:id', 
     ...auth, 
     authorizeRole('SUPER_ADMIN', 'COMPANY_ADMIN'), 
-    uploadBranchImage.single('photos'), 
+    safeUploadBranchImage, 
     verifyResourceOwnership(Branch), 
     validateUpdateBranch, 
     updateBranch

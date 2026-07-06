@@ -2,6 +2,7 @@
 
 import mongoose from 'mongoose';
 import Branch from './branch.model.js';
+import Company from '../companies/company.model.js';
 
 /**
  * @swagger
@@ -60,13 +61,54 @@ export const getBranchById = async (req, res, next) => {
  */
 export const createBranch = async (req, res, next) => {
     try {
+        let companyId = req.companyId || req.body.companyId;
+        if (!companyId) {
+            const defaultCompany = await Company.findOne({ isActive: true });
+            if (defaultCompany) {
+                companyId = defaultCompany._id;
+            } else {
+                const anyCompany = await Company.findOne({});
+                if (anyCompany) {
+                    companyId = anyCompany._id;
+                } else {
+                    const newDefaultCompany = await Company.create({
+                        legalName: "Empresa Principal S.A.",
+                        alias: "Empresa Principal",
+                        taxId: "CF-DEFAULT-001",
+                        sector: "Restaurante",
+                        companySize: "1-10",
+                        country: "Guatemala",
+                        timezone: "America/Guatemala",
+                        currency: "GTQ",
+                        subdomain: "empresa-principal",
+                        owner: req.user?._id || "00000000-0000-0000-0000-000000000000",
+                        isActive: true
+                    });
+                    companyId = newDefaultCompany._id;
+                }
+            }
+        }
         const branchData = { 
             ...req.body, 
-            companyId: req.companyId || req.body.companyId // Inyectar ID si existe en contexto, sino del body
+            companyId
         };
 
         if (req.file) {
-            branchData.photos = [req.file.path]; // Cloudinary URL
+            const photoUrl = req.file.path || req.file.secure_url || req.file.url || (typeof req.file === 'string' ? req.file : null);
+            if (photoUrl) {
+                branchData.photos = [photoUrl];
+            } else {
+                delete branchData.photos;
+            }
+        } else if (branchData.photos) {
+            if (Array.isArray(branchData.photos)) {
+                branchData.photos = branchData.photos.filter(p => typeof p === 'string' && !p.includes('[object'));
+                if (branchData.photos.length === 0) delete branchData.photos;
+            } else if (typeof branchData.photos !== 'string' || branchData.photos.includes('[object')) {
+                delete branchData.photos;
+            } else {
+                branchData.photos = [branchData.photos];
+            }
         }
 
         const branch = new Branch(branchData);
@@ -91,9 +133,23 @@ export const updateBranch = async (req, res, next) => {
         const updateData = { ...req.body };
 
         if (req.file) {
-            updateData.photos = [req.file.path];
+            const photoUrl = req.file.path || req.file.secure_url || req.file.url || (typeof req.file === 'string' ? req.file : null);
+            if (photoUrl) {
+                updateData.photos = [photoUrl];
+            } else {
+                delete updateData.photos;
+            }
         } else if (req.body.removePhoto === "true") {
             updateData.photos = ['photos/default_photos_logo'];
+        } else if (updateData.photos) {
+            if (Array.isArray(updateData.photos)) {
+                updateData.photos = updateData.photos.filter(p => typeof p === 'string' && !p.includes('[object'));
+                if (updateData.photos.length === 0) delete updateData.photos;
+            } else if (typeof updateData.photos !== 'string' || updateData.photos.includes('[object')) {
+                delete updateData.photos;
+            } else {
+                updateData.photos = [updateData.photos];
+            }
         }
 
         const branch = await Branch.findByIdAndUpdate(id, updateData, {
