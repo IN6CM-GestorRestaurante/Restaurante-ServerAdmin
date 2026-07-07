@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "3001",
+    "PORT_AUTH_NODE": "3007",
+    "PORT_SERVER_USER": "3003",
+    "URI_MONGODB": "mongodb+srv://sderosa2023220_db_user:RDYv0wCD4SngGkh9@cluster0.sbsikvd.mongodb.net/restaurante_db?retryWrites=true&w=majority&appName=Cluster0",
+    "DATABASE_URL": "postgresql://postgres.ajrbkcbviznhzrutgwcy:Q%3FR%40489%2Cc%2FM4b%2Fn@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
+    "DB_HOST": "aws-0-us-east-1.pooler.supabase.com",
+    "DB_PORT": "6543",
+    "DB_NAME": "postgres",
+    "DB_USERNAME": "postgres.ajrbkcbviznhzrutgwcy",
+    "DB_PASSWORD": "Q?R@489,c/M4b/n",
+    "SECRETORPRIVATEKEY": "Restaurante_Super_Secret_Key_2026_DotNet8",
+    "JWT_SECRET": "Restaurante_Super_Secret_Key_2026_DotNet8",
+    "JWT_EXPIRES_IN": "8h",
+    "JWT_REFRESH_EXPIRES_IN": "30d",
+    "REFRESH_TOKEN_EXPIRES_DAYS": "30",
+    "ACCESS_TOKEN_EXPIRES_MINUTES": "480",
+    "JWT_ISSUER": "auth-service",
+    "JWT_AUDIENCE": "restaurante-app",
+    "AUTH_SERVICE_URL": "http://restaurante-auth-service:8080",
+    "ADMIN_SERVICE_URL": "http://restaurante-server-admin:3001",
+    "AUTH_NODE_URL": "http://restaurante-auth-node:3007/api/v1",
+    "FRONTEND_URL": "http://localhost:5173",
+    "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:3001,http://localhost:3000",
+    "ADMIN_ALLOWED_ORIGINS": "http://localhost:5173",
+    "VITE_AUTH_URL": "http://localhost:5065/api/v1",
+    "VITE_ADMIN_URL": "http://localhost:3001/api/v1",
+    "CLOUDINARY_CLOUD_NAME": "dueikakf8",
+    "CLOUDINARY_API_KEY": "119292848621234",
+    "CLOUDINARY_API_SECRET": "ckVTJkNQUjUatlwOcYFMg-9hAyM",
+    "CLOUDINARY_BASE_URL": "https://res.cloudinary.com/dueikakf8/image/upload/",
+    "CLOUDINARY_FOLDER": "auth_service/profiles",
+    "CLOUDINARY_DEFAULT_AVATAR_FILENAME": "avatar-default.png",
+    "SEED_ENABLED": "true",
+    "UPLOAD_PATH": "./uploads/profiles/",
+    "MAX_LOGIN_ATTEMPTS": "5",
+    "LOCKOUT_TIME_MS": "1800000",
+    "VERIFICATION_EMAIL_EXPIRY_HOURS": "24",
+    "PASSWORD_RESET_EXPIRY_HOURS": "1"
+  }
+}
