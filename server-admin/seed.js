@@ -239,11 +239,13 @@ const seedDatabase = async () => {
                 // Desayuno
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: 25,
                   name: isCampero ? 'Desayuno Tradicional' : 'McMuffin de Huevo',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464877/branches/menu/desayuno-super-t-pico-removebg-preview-41c7414e.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466762/branches/menu/mcmuffin-de-huevo-removebg-preview-09996824.png',
                   description: isCampero ? 'Huevos, frijoles y plátanos.' : 'Muffin inglés con huevo y queso.',
                   recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Huevos'), quantityRequired: 2 }] },
                 // Almuerzo / Cena
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: isCampero ? 35 : 40,
                   name: isCampero ? '2 Piezas de Pollo' : 'Big Mac',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783465344/branches/menu/2-piezas-de-pollo-removebg-preview-7d42471b.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466751/branches/menu/big-mac-removebg-preview-9e53a8e6.png',
                   description: isCampero ? '2 piezas de pollo frito tradicional.' : 'Dos tortas de carne, salsa especial, queso.',
                   recipe: isCampero 
                     ? [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Pollo Fresco'), quantityRequired: 0.5 }] 
@@ -251,15 +253,18 @@ const seedDatabase = async () => {
                 // Complementos / Postres
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: 15,
                   name: 'Papas Fritas',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464861/branches/menu/papas-fritas-removebg-preview-f1fa23e2.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466771/branches/menu/papas-fritas-ca047f05.png',
                   description: 'Porción de papas.',
                   recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, isCampero ? 'Papas' : 'Papas Congeladas'), quantityRequired: 0.2 }] },
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Postre', price: 12,
                   name: isCampero ? 'Helado Campero' : 'McFlurry',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464352/branches/menu/helado-09ac73f7.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466780/branches/menu/mcflurry-removebg-preview-589278dc.png',
                   description: 'Helado cremoso.',
                   recipe: [] }, // Sin receta para simplificar
                 // Bebidas
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Bebida', price: 10,
                   name: 'Gaseosa Mediana',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464910/branches/menu/gaseosa-mediana-removebg-preview-fb4f0868.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466718/branches/menu/gaseosa-mediana-18c89d41.png',
                   description: 'Bebida carbonatada.',
                   recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Sirope Gaseosa'), quantityRequired: 0.1 }] }
             ]);
@@ -268,6 +273,7 @@ const seedDatabase = async () => {
             const combos = await Menu.insertMany([
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'COMBO', category: 'Combo', price: isCampero ? 50 : 55,
                   name: isCampero ? 'Menú Campero 2 Piezas' : 'Menú Big Mac',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783465324/branches/menu/men-campero-2-piezas-removebg-preview-646adc12.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466740/branches/menu/men-big-mac-removebg-preview-d3cc7184.png',
                   description: 'Combo completo con bebida y papas.',
                   comboItems: [
                       { menuItemId: singles[1]._id, quantity: 1 }, // Plato Fuerte
@@ -277,6 +283,7 @@ const seedDatabase = async () => {
                 },
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'COMBO', category: 'Combo', price: 30,
                   name: isCampero ? 'Combo Desayuno Chapín' : 'Combo McMuffin',
+                  image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783465236/branches/menu/desayuno-campero-removebg-preview-6fb534bc.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466729/branches/menu/combo-mcmuffin-removebg-preview-7fc8cc93.png',
                   description: 'Empieza tu día con este desayuno en oferta.',
                   comboItems: [
                       { menuItemId: singles[0]._id, quantity: 1 },
