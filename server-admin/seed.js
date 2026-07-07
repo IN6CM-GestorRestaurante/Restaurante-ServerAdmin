@@ -1,6 +1,9 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import User from './src/users/user.model.js';
+const userSchema = new mongoose.Schema({
+    name: String, surname: String, username: String, email: String, phone: String, role: String, status: Boolean, companyId: mongoose.Schema.Types.ObjectId, branchId: mongoose.Schema.Types.ObjectId
+});
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 import Company from './src/companies/company.model.js';
 import Branch from './src/branchs/branch.model.js';
 import Table from './src/tables/table.model.js';
@@ -14,14 +17,46 @@ import OrderAudit from './src/orders/orderAudit.model.js';
 
 const SEED_ENABLED = process.env.SEED_ENABLED !== 'false';
 
-/**
- * Mega-Seeder — Inicialización masiva para entorno de pruebas.
- * Crea un tenant completo con empresa, sucursales, empleados, menús (SINGLE + COMBO),
- * ingredientes, stock, órdenes, auditoría, reservaciones y facturas.
- * 
- * Idempotente: limpia toda la base antes de insertar.
- * Desactivable: SEED_ENABLED=false en .env
- */
+// Mongoose Object IDs constantes para consistencia cruzada con Entity Framework (SQL Server)
+const Ids = {
+    // Pollo Campero
+    Campero: {
+        Company: new mongoose.Types.ObjectId('c00000000000000000000001'),
+        Branch1: new mongoose.Types.ObjectId('b00000000000000000000011'),
+        Branch2: new mongoose.Types.ObjectId('b00000000000000000000012'),
+        Users: {
+            Admin: new mongoose.Types.ObjectId('e00000000000000000000010'),
+            Manager1: new mongoose.Types.ObjectId('e00000000000000000000011'),
+            Waiter1: new mongoose.Types.ObjectId('e00000000000000000000012'),
+            Chef1: new mongoose.Types.ObjectId('e00000000000000000000013'),
+            Cashier1: new mongoose.Types.ObjectId('e00000000000000000000014'),
+            Manager2: new mongoose.Types.ObjectId('e00000000000000000000015'),
+            Waiter2: new mongoose.Types.ObjectId('e00000000000000000000016'),
+            Chef2: new mongoose.Types.ObjectId('e00000000000000000000017'),
+            Cashier2: new mongoose.Types.ObjectId('e00000000000000000000018'),
+            Client1: new mongoose.Types.ObjectId('e00000000000000000000019'),
+        }
+    },
+    // Mc Donalds
+    McDo: {
+        Company: new mongoose.Types.ObjectId('c00000000000000000000002'),
+        Branch1: new mongoose.Types.ObjectId('b00000000000000000000021'),
+        Branch2: new mongoose.Types.ObjectId('b00000000000000000000022'),
+        Users: {
+            Admin: new mongoose.Types.ObjectId('e00000000000000000000020'),
+            Manager1: new mongoose.Types.ObjectId('e00000000000000000000021'),
+            Waiter1: new mongoose.Types.ObjectId('e00000000000000000000022'),
+            Chef1: new mongoose.Types.ObjectId('e00000000000000000000023'),
+            Cashier1: new mongoose.Types.ObjectId('e00000000000000000000024'),
+            Manager2: new mongoose.Types.ObjectId('e00000000000000000000025'),
+            Waiter2: new mongoose.Types.ObjectId('e00000000000000000000026'),
+            Chef2: new mongoose.Types.ObjectId('e00000000000000000000027'),
+            Cashier2: new mongoose.Types.ObjectId('e00000000000000000000028'),
+            Client1: new mongoose.Types.ObjectId('e00000000000000000000029'),
+        }
+    }
+};
+
 const seedDatabase = async () => {
     if (!SEED_ENABLED) {
         console.log('⏭️  Seeder desactivado (SEED_ENABLED=false)');
@@ -29,355 +64,285 @@ const seedDatabase = async () => {
     }
 
     try {
-        console.log('🚀 Iniciando Mega-Seeder...');
+        console.log('🚀 Iniciando Mega-Seeder para Pollo Campero y Mc Donalds...');
         await mongoose.connect(process.env.URI_MONGODB, {
             serverSelectionTimeoutMS: 5000,
             maxPoolSize: 10
         });
         console.log('🟢 Conectado a MongoDB');
 
-        // ═══════════════════════════════════════════════
-        // LIMPIEZA (orden inverso de dependencias)
-        // ═══════════════════════════════════════════════
+        // LIMPIEZA
         console.log('🗑️  Limpiando base de datos...');
-        await OrderAudit.collection.deleteMany({});  // Bypass inmutability hooks
-        await Invoice.deleteMany();
-        await Reservation.deleteMany();
-        await Order.deleteMany();
-        await Stock.deleteMany();
-        await Table.deleteMany();
-        await Menu.deleteMany();
-        await Ingredient.deleteMany();
-        await Branch.deleteMany();
-        await Company.deleteMany();
-        await User.deleteMany();
+        await OrderAudit.collection.deleteMany({});
+        await Invoice.collection.deleteMany({});
+        await Reservation.collection.deleteMany({});
+        await Order.collection.deleteMany({});
+        await Stock.collection.deleteMany({});
+        await Table.collection.deleteMany({});
+        await Menu.collection.deleteMany({});
+        await Ingredient.collection.deleteMany({});
+        await Branch.collection.deleteMany({});
+        await Company.collection.deleteMany({});
+        await User.collection.deleteMany({});
 
         // ═══════════════════════════════════════════════
-        // 1. COMPANY_ADMIN
+        // EMPRESAS Y SUCURSALES
         // ═══════════════════════════════════════════════
-        console.log('👤 Creando administrador de empresa...');
-        const adminUser = await User.create({
-            name: 'Carlos', surname: 'Mendoza', username: 'cmendoza',
-            email: 'admin@restaurante.local', phone: '55512345',
-            role: 'COMPANY_ADMIN', status: true
+        console.log('🏢 Creando empresas y sucursales...');
+        
+        // Pollo Campero
+        const campero = await Company.create({
+            _id: Ids.Campero.Company,
+            legalName: 'Pollo Campero S.A.', alias: 'Pollo Campero',
+            taxId: 'NIT-987654-3', sector: 'Restaurante', companySize: '200+',
+            country: 'Guatemala', timezone: 'America/Guatemala', currency: 'GTQ',
+            subdomain: 'campero', owner: Ids.Campero.Users.Admin,
+            isActive: true, logo: 'https://via.placeholder.com/150'
         });
 
-        // ═══════════════════════════════════════════════
-        // 2. COMPANY
-        // ═══════════════════════════════════════════════
-        console.log('🏢 Creando empresa...');
-        const company = await Company.create({
-            legalName: 'Restaurantes El Gran Sabor S.A.',
-            alias: 'El Gran Sabor',
-            taxId: 'NIT-123456-7',
-            sector: 'Restaurante',
-            companySize: '11-50',
-            country: 'Guatemala',
-            timezone: 'America/Guatemala',
-            currency: 'GTQ',
-            subdomain: 'elgransabor',
-            owner: adminUser._id
+        const camperoBranches = await Branch.insertMany([
+            {
+                _id: Ids.Campero.Branch1, companyId: campero._id,
+                name: 'Campero Zona 1', description: 'Sucursal icónica en el centro histórico.',
+                address: '6a Avenida 10-20, Zona 1, Guatemala City',
+                openingTime: '06:00', closingTime: '22:00',
+                category: 'Comida Rápida', averagePrice: 45,
+                email: 'zona1@campero.com', phoneNumber: '+50255500010',
+                isActive: true, state: 'Operativa'
+            },
+            {
+                _id: Ids.Campero.Branch2, companyId: campero._id,
+                name: 'Campero Majadas', description: 'Sucursal moderna con autoservicio.',
+                address: 'Parque Majadas, Zona 11, Guatemala City',
+                openingTime: '07:00', closingTime: '23:00',
+                category: 'Comida Rápida', averagePrice: 50,
+                email: 'majadas@campero.com', phoneNumber: '+50255500011',
+                isActive: true, state: 'Operativa'
+            }
+        ]);
+
+        // Mc Donalds
+        const mcdo = await Company.create({
+            _id: Ids.McDo.Company,
+            legalName: 'Restaurantes Mc Donalds Mesoamerica', alias: 'Mc Donalds',
+            taxId: 'NIT-112233-4', sector: 'Restaurante', companySize: '200+',
+            country: 'Guatemala', timezone: 'America/Guatemala', currency: 'GTQ',
+            subdomain: 'mcdonalds', owner: Ids.McDo.Users.Admin,
+            isActive: true, logo: 'https://via.placeholder.com/150'
         });
 
-        adminUser.companyId = company._id;
-        await adminUser.save();
-
-        // ═══════════════════════════════════════════════
-        // 3. SUCURSALES
-        // ═══════════════════════════════════════════════
-        console.log('📍 Creando sucursales...');
-        const branches = await Branch.insertMany([
+        const mcdoBranches = await Branch.insertMany([
             {
-                companyId: company._id,
-                name: 'El Gran Sabor - Centro',
-                description: 'Sucursal principal ubicada en el centro histórico con ambiente familiar y cocina tradicional.',
-                address: '6a Avenida 12-45, Zona 1, Guatemala City',
-                openingTime: '07:00', closingTime: '22:00',
-                category: 'Casera', averagePrice: 65,
-                email: 'centro@elgransabor.gt', phoneNumber: '+50255512345'
+                _id: Ids.McDo.Branch1, companyId: mcdo._id,
+                name: 'Mc Donalds Roosevelt', description: 'Sucursal grande sobre calzada principal.',
+                address: 'Calzada Roosevelt, Zona 7, Guatemala City',
+                openingTime: '06:00', closingTime: '23:59',
+                category: 'Comida Rápida', averagePrice: 40,
+                email: 'roosevelt@mcdonalds.com', phoneNumber: '+50255500020',
+                isActive: true, state: 'Operativa'
             },
             {
-                companyId: company._id,
-                name: 'El Gran Sabor - Zona 10',
-                description: 'Sucursal moderna en zona empresarial con terraza y bar de especialidades.',
-                address: 'Boulevard Los Próceres 18-30, Zona 10, Guatemala City',
-                openingTime: '08:00', closingTime: '23:00',
-                category: 'Casera', averagePrice: 85,
-                email: 'zona10@elgransabor.gt', phoneNumber: '+50255567890'
-            }
-        ]);
-        const [centroBranch, zona10Branch] = branches;
-
-        // ═══════════════════════════════════════════════
-        // 4. EMPLEADOS (roles canónicos)
-        // ═══════════════════════════════════════════════
-        console.log('👥 Creando empleados...');
-        const employees = await User.insertMany([
-            {
-                name: 'Ana', surname: 'López', username: 'alopez', email: 'ana@elgransabor.gt', phone: '55500001',
-                role: 'BRANCH_MANAGER', companyId: company._id, branchId: centroBranch._id
-            },
-            {
-                name: 'Pedro', surname: 'García', username: 'pgarcia', email: 'pedro@elgransabor.gt', phone: '55500002',
-                role: 'WAITER', companyId: company._id, branchId: centroBranch._id
-            },
-            {
-                name: 'María', surname: 'Hernández', username: 'mhernandez', email: 'maria@elgransabor.gt', phone: '55500003',
-                role: 'WAITER', companyId: company._id, branchId: zona10Branch._id
-            },
-            {
-                name: 'Roberto', surname: 'Sánchez', username: 'rsanchez', email: 'roberto@elgransabor.gt', phone: '55500004',
-                role: 'CHEF', companyId: company._id, branchId: centroBranch._id
-            },
-            {
-                name: 'Laura', surname: 'Torres', username: 'ltorres', email: 'laura@elgransabor.gt', phone: '55500005',
-                role: 'CASHIER', companyId: company._id, branchId: centroBranch._id
+                _id: Ids.McDo.Branch2, companyId: mcdo._id,
+                name: 'Mc Donalds Cayalá', description: 'Restaurante premium en Paseo Cayalá.',
+                address: 'Paseo Cayalá, Zona 16, Guatemala City',
+                openingTime: '07:00', closingTime: '23:00',
+                category: 'Comida Rápida', averagePrice: 45,
+                email: 'cayala@mcdonalds.com', phoneNumber: '+50255500021',
+                isActive: true, state: 'Operativa'
             }
         ]);
 
         // ═══════════════════════════════════════════════
-        // 5. INGREDIENTES (catálogo global de la empresa)
+        // EMPLEADOS
         // ═══════════════════════════════════════════════
-        console.log('🍅 Creando catálogo de ingredientes...');
-        const ingredientData = [
-            { name: 'Pechuga de Pollo', unit: 'kg', costPrice: 45.00 },
-            { name: 'Arroz', unit: 'kg', costPrice: 8.50 },
-            { name: 'Frijoles Negros', unit: 'kg', costPrice: 12.00 },
-            { name: 'Tomate', unit: 'kg', costPrice: 15.00 },
-            { name: 'Cebolla', unit: 'kg', costPrice: 10.00 },
-            { name: 'Ajo', unit: 'kg', costPrice: 35.00 },
-            { name: 'Aceite de Oliva', unit: 'litro', costPrice: 55.00 },
-            { name: 'Queso Fresco', unit: 'kg', costPrice: 50.00 },
-            { name: 'Tortillas de Maíz', unit: 'paquete', costPrice: 5.00 },
-            { name: 'Aguacate', unit: 'unidad', costPrice: 8.00 },
-            { name: 'Limón', unit: 'unidad', costPrice: 1.50 },
-            { name: 'Crema', unit: 'litro', costPrice: 25.00 },
-            { name: 'Pan Francés', unit: 'unidad', costPrice: 2.00 },
-            { name: 'Azúcar', unit: 'kg', costPrice: 7.00 },
-            { name: 'Café Molido', unit: 'kg', costPrice: 65.00 }
-        ].map(ing => ({ ...ing, companyId: company._id }));
-        const ingredients = await Ingredient.insertMany(ingredientData);
-
-        const getIngId = (name) => ingredients.find(i => i.name === name)._id;
+        console.log('👥 Creando empleados de ambas marcas...');
+        const usersToInsert = [
+            // CAMPERO - ADMIN
+            { _id: Ids.Campero.Users.Admin, name: 'Juan', surname: 'Bautista', username: 'jbautista', email: 'admin@campero.com', phone: '55511111', role: 'COMPANY_ADMIN', status: true, companyId: campero._id },
+            // CAMPERO - BRANCH 1
+            { _id: Ids.Campero.Users.Manager1, name: 'Luis', surname: 'Perez', username: 'lperez', email: 'manager1@campero.com', phone: '55511112', role: 'BRANCH_MANAGER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch1 },
+            { _id: Ids.Campero.Users.Waiter1, name: 'Sofia', surname: 'Castro', username: 'scastro', email: 'waiter1@campero.com', phone: '55511113', role: 'WAITER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch1 },
+            { _id: Ids.Campero.Users.Chef1, name: 'Mario', surname: 'Ruiz', username: 'mruiz', email: 'chef1@campero.com', phone: '55511114', role: 'CHEF', status: true, companyId: campero._id, branchId: Ids.Campero.Branch1 },
+            { _id: Ids.Campero.Users.Cashier1, name: 'Ana', surname: 'Lopez', username: 'alopez', email: 'cashier1@campero.com', phone: '55511115', role: 'CASHIER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch1 },
+            // CAMPERO - BRANCH 2
+            { _id: Ids.Campero.Users.Manager2, name: 'Carlos', surname: 'Giron', username: 'cgiron', email: 'manager2@campero.com', phone: '55511116', role: 'BRANCH_MANAGER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
+            { _id: Ids.Campero.Users.Waiter2, name: 'Diana', surname: 'Morales', username: 'dmorales', email: 'waiter2@campero.com', phone: '55511117', role: 'WAITER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
+            { _id: Ids.Campero.Users.Chef2, name: 'Pedro', surname: 'Gomez', username: 'pgomez', email: 'chef2@campero.com', phone: '55511118', role: 'CHEF', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
+            { _id: Ids.Campero.Users.Cashier2, name: 'Maria', surname: 'Sosa', username: 'msosa', email: 'cashier2@campero.com', phone: '55511119', role: 'CASHIER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
+            // CAMPERO - CLIENT
+            { _id: Ids.Campero.Users.Client1, name: 'Cliente', surname: 'Campero', username: 'ccampero', email: 'cliente@campero.com', phone: '55511120', role: 'CLIENT', status: true, companyId: campero._id },
+            
+            // MCDONALDS - ADMIN
+            { _id: Ids.McDo.Users.Admin, name: 'Ronald', surname: 'Mac', username: 'rmac', email: 'admin@mcdonalds.com', phone: '55522221', role: 'COMPANY_ADMIN', status: true, companyId: mcdo._id },
+            // MCDONALDS - BRANCH 1
+            { _id: Ids.McDo.Users.Manager1, name: 'Oscar', surname: 'Pinto', username: 'opinto', email: 'manager1@mcdonalds.com', phone: '55522222', role: 'BRANCH_MANAGER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch1 },
+            { _id: Ids.McDo.Users.Waiter1, name: 'Elena', surname: 'Cruz', username: 'ecruz', email: 'waiter1@mcdonalds.com', phone: '55522223', role: 'WAITER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch1 },
+            { _id: Ids.McDo.Users.Chef1, name: 'Hugo', surname: 'Leon', username: 'hleon', email: 'chef1@mcdonalds.com', phone: '55522224', role: 'CHEF', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch1 },
+            { _id: Ids.McDo.Users.Cashier1, name: 'Rosa', surname: 'Mendez', username: 'rmendez', email: 'cashier1@mcdonalds.com', phone: '55522225', role: 'CASHIER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch1 },
+            // MCDONALDS - BRANCH 2
+            { _id: Ids.McDo.Users.Manager2, name: 'Ivan', surname: 'Salas', username: 'isalas', email: 'manager2@mcdonalds.com', phone: '55522226', role: 'BRANCH_MANAGER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
+            { _id: Ids.McDo.Users.Waiter2, name: 'Laura', surname: 'Vargas', username: 'lvargas', email: 'waiter2@mcdonalds.com', phone: '55522227', role: 'WAITER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
+            { _id: Ids.McDo.Users.Chef2, name: 'Julio', surname: 'Rios', username: 'jrios', email: 'chef2@mcdonalds.com', phone: '55522228', role: 'CHEF', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
+            { _id: Ids.McDo.Users.Cashier2, name: 'Sara', surname: 'Vega', username: 'svega', email: 'cashier2@mcdonalds.com', phone: '55522229', role: 'CASHIER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
+            // MCDONALDS - CLIENT
+            { _id: Ids.McDo.Users.Client1, name: 'Cliente', surname: 'McDo', username: 'cmcdo', email: 'cliente@mcdonalds.com', phone: '55522230', role: 'CLIENT', status: true, companyId: mcdo._id }
+        ];
+        const allUsers = await User.insertMany(usersToInsert);
 
         // ═══════════════════════════════════════════════
-        // 6. MENÚ — Platillos SINGLE + 1 COMBO
+        // INGREDIENTES
         // ═══════════════════════════════════════════════
-        console.log('🍕 Creando menú (SINGLE + COMBO)...');
+        console.log('🍅 Creando catálogos de ingredientes...');
+        const camperoIngredients = await Ingredient.insertMany([
+            { companyId: campero._id, name: 'Pollo Fresco', unit: 'kg', costPrice: 20 },
+            { companyId: campero._id, name: 'Papas', unit: 'kg', costPrice: 8 },
+            { companyId: campero._id, name: 'Empanizado Secreto', unit: 'kg', costPrice: 15 },
+            { companyId: campero._id, name: 'Aceite', unit: 'litro', costPrice: 25 },
+            { companyId: campero._id, name: 'Pan', unit: 'unidad', costPrice: 2 },
+            { companyId: campero._id, name: 'Frijoles', unit: 'kg', costPrice: 10 },
+            { companyId: campero._id, name: 'Huevos', unit: 'docena', costPrice: 15 },
+            { companyId: campero._id, name: 'Sirope Gaseosa', unit: 'litro', costPrice: 30 }
+        ]);
+        const mcdoIngredients = await Ingredient.insertMany([
+            { companyId: mcdo._id, name: 'Carne de Res', unit: 'kg', costPrice: 35 },
+            { companyId: mcdo._id, name: 'Pan de Hamburguesa', unit: 'unidad', costPrice: 3 },
+            { companyId: mcdo._id, name: 'Queso Cheddar', unit: 'kg', costPrice: 40 },
+            { companyId: mcdo._id, name: 'Papas Congeladas', unit: 'kg', costPrice: 12 },
+            { companyId: mcdo._id, name: 'Lechuga', unit: 'kg', costPrice: 8 },
+            { companyId: mcdo._id, name: 'Salsa Especial', unit: 'litro', costPrice: 20 },
+            { companyId: mcdo._id, name: 'Huevos', unit: 'docena', costPrice: 15 },
+            { companyId: mcdo._id, name: 'Sirope Gaseosa', unit: 'litro', costPrice: 30 }
+        ]);
 
-        // 6a. Platillos individuales (SINGLE)
-        const singleMenus = await Menu.insertMany([
-            {
-                branch: centroBranch._id, companyId: company._id, itemType: 'SINGLE',
-                name: 'Pollo en Pepián',
-                description: 'Pollo en salsa tradicional guatemalteca de pepitoria y especias.',
-                recipe: [
-                    { ingredientId: getIngId('Pechuga de Pollo'), quantityRequired: 0.35 },
-                    { ingredientId: getIngId('Tomate'), quantityRequired: 0.15 },
-                    { ingredientId: getIngId('Cebolla'), quantityRequired: 0.05 }
+        const getIngId = (ings, name) => ings.find(i => i.name === name)._id;
+
+        // ═══════════════════════════════════════════════
+        // MENÚS
+        // ═══════════════════════════════════════════════
+        console.log('🍔 Creando menús y combos...');
+        const createMenu = async (companyId, branchId, ings, type) => {
+            const isCampero = type === 'Campero';
+            // SINGLES
+            const singles = await Menu.insertMany([
+                // Desayuno
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: 25,
+                  name: isCampero ? 'Desayuno Tradicional' : 'McMuffin de Huevo',
+                  description: isCampero ? 'Huevos, frijoles y plátanos.' : 'Muffin inglés con huevo y queso.',
+                  recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Huevos'), quantityRequired: 2 }] },
+                // Almuerzo / Cena
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: isCampero ? 35 : 40,
+                  name: isCampero ? '2 Piezas de Pollo' : 'Big Mac',
+                  description: isCampero ? '2 piezas de pollo frito tradicional.' : 'Dos tortas de carne, salsa especial, queso.',
+                  recipe: isCampero 
+                    ? [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Pollo Fresco'), quantityRequired: 0.5 }] 
+                    : [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Carne de Res'), quantityRequired: 0.3 }] },
+                // Complementos / Postres
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: 15,
+                  name: 'Papas Fritas',
+                  description: 'Porción de papas.',
+                  recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, isCampero ? 'Papas' : 'Papas Congeladas'), quantityRequired: 0.2 }] },
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Postre', price: 12,
+                  name: isCampero ? 'Helado Campero' : 'McFlurry',
+                  description: 'Helado cremoso.',
+                  recipe: [] }, // Sin receta para simplificar
+                // Bebidas
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Bebida', price: 10,
+                  name: 'Gaseosa Mediana',
+                  description: 'Bebida carbonatada.',
+                  recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Sirope Gaseosa'), quantityRequired: 0.1 }] }
+            ]);
+
+            // COMBOS
+            const combos = await Menu.insertMany([
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'COMBO', category: 'Combo', price: isCampero ? 50 : 55,
+                  name: isCampero ? 'Menú Campero 2 Piezas' : 'Menú Big Mac',
+                  description: 'Combo completo con bebida y papas.',
+                  comboItems: [
+                      { menuItemId: singles[1]._id, quantity: 1 }, // Plato Fuerte
+                      { menuItemId: singles[2]._id, quantity: 1 }, // Papas
+                      { menuItemId: singles[4]._id, quantity: 1 }  // Bebida
+                  ]
+                },
+                { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'COMBO', category: 'Combo', price: 30,
+                  name: isCampero ? 'Combo Desayuno Chapín' : 'Combo McMuffin',
+                  description: 'Empieza tu día con este desayuno en oferta.',
+                  comboItems: [
+                      { menuItemId: singles[0]._id, quantity: 1 },
+                      { menuItemId: singles[4]._id, quantity: 1 }
+                  ],
+                  promotion: {
+                      isActive: true, discountType: 'PERCENTAGE', discountValue: 20,
+                      startsAt: new Date(), endsAt: new Date(Date.now() + 7*24*3600*1000)
+                  }
+                }
+            ]);
+
+            return { singles, combos };
+        };
+
+        const camperoMenuB1 = await createMenu(campero._id, Ids.Campero.Branch1, camperoIngredients, 'Campero');
+        const camperoMenuB2 = await createMenu(campero._id, Ids.Campero.Branch2, camperoIngredients, 'Campero');
+        const mcdoMenuB1 = await createMenu(mcdo._id, Ids.McDo.Branch1, mcdoIngredients, 'McDo');
+        const mcdoMenuB2 = await createMenu(mcdo._id, Ids.McDo.Branch2, mcdoIngredients, 'McDo');
+
+        // ═══════════════════════════════════════════════
+        // STOCK, MESAS, ORDENES Y RESERVACIONES POR SUCURSAL
+        // ═══════════════════════════════════════════════
+        console.log('📦 Configurando mesas, stock, órdenes y facturas...');
+        
+        const setupBranchData = async (companyId, branchId, ings, menus, prefix, waiterId, cashierId) => {
+            // Stock
+            const stockEntries = ings.map(ing => ({
+                branchId, ingredientId: ing._id, quantity: Math.floor(Math.random() * 500) + 100, minStock: 50
+            }));
+            await Stock.insertMany(stockEntries);
+
+            // Mesas
+            const tables = await Table.insertMany([
+                { branch: branchId, companyId, number: `${prefix}01`, capacity: 2, location: 'Ventana', status: 'Disponible' },
+                { branch: branchId, companyId, number: `${prefix}02`, capacity: 4, location: 'Sala Principal', status: 'Ocupada' },
+                { branch: branchId, companyId, number: `${prefix}03`, capacity: 6, location: 'Terraza', status: 'Reservada' },
+                { branch: branchId, companyId, number: `${prefix}04`, capacity: 4, location: 'Sala Principal', status: 'Disponible' },
+            ]);
+
+            // Órdenes
+            const order1 = await Order.create({
+                tables: [tables[1]._id], waiter: waiterId, branch: branchId, status: 'in-kitchen',
+                items: [
+                    { menuItem: menus.combos[0]._id, quantity: 2, priceAtTime: menus.combos[0].price, status: 'in-kitchen' },
+                    { menuItem: menus.singles[3]._id, quantity: 1, priceAtTime: menus.singles[3].price, status: 'pending' }
                 ],
-                price: 55.00, category: 'Plato Fuerte'
-            },
-            {
-                branch: centroBranch._id, companyId: company._id, itemType: 'SINGLE',
-                name: 'Desayuno Chapín',
-                description: 'Huevos al gusto, frijoles volteados, plátanos fritos y queso fresco.',
-                recipe: [
-                    { ingredientId: getIngId('Frijoles Negros'), quantityRequired: 0.20 },
-                    { ingredientId: getIngId('Queso Fresco'), quantityRequired: 0.10 },
-                    { ingredientId: getIngId('Tomate'), quantityRequired: 0.10 }
-                ],
-                price: 35.00, category: 'Plato Fuerte'
-            },
-            {
-                branch: centroBranch._id, companyId: company._id, itemType: 'SINGLE',
-                name: 'Tacos de Pollo',
-                description: '3 tacos de pollo acompañados de guacamole y crema.',
-                recipe: [
-                    { ingredientId: getIngId('Pechuga de Pollo'), quantityRequired: 0.15 },
-                    { ingredientId: getIngId('Tortillas de Maíz'), quantityRequired: 3 },
-                    { ingredientId: getIngId('Aguacate'), quantityRequired: 1 }
-                ],
-                price: 40.00, category: 'Plato Fuerte'
-            },
-            {
-                branch: centroBranch._id, companyId: company._id, itemType: 'SINGLE',
-                name: 'Café de Olla',
-                description: 'Café tradicional con canela, piloncillo y pan francés.',
-                recipe: [
-                    { ingredientId: getIngId('Café Molido'), quantityRequired: 0.02 },
-                    { ingredientId: getIngId('Azúcar'), quantityRequired: 0.01 },
-                    { ingredientId: getIngId('Pan Francés'), quantityRequired: 1 }
-                ],
-                price: 15.00, category: 'Bebida'
-            },
-            {
-                branch: centroBranch._id, companyId: company._id, itemType: 'SINGLE',
-                name: 'Limonada Natural',
-                description: 'Limonada fresca con hielo y un toque de azúcar.',
-                recipe: [
-                    { ingredientId: getIngId('Limón'), quantityRequired: 3 },
-                    { ingredientId: getIngId('Azúcar'), quantityRequired: 0.03 }
-                ],
-                price: 12.00, category: 'Bebida'
-            }
-        ]);
+                total: menus.combos[0].price * 2 + menus.singles[3].price
+            });
 
-        // 6b. Combo (referencia a platillos SINGLE existentes)
-        const comboMenu = await Menu.create({
-            branch: centroBranch._id, companyId: company._id, itemType: 'COMBO',
-            name: 'Combo Almuerzo Chapín',
-            description: 'Incluye Pollo en Pepián + Limonada Natural. ¡El combo más popular!',
-            recipe: [],  // Los combos no tienen receta propia
-            comboItems: [
-                { menuItemId: singleMenus[0]._id, quantity: 1 },  // Pollo en Pepián
-                { menuItemId: singleMenus[4]._id, quantity: 1 }   // Limonada Natural
-            ],
-            price: 60.00,  // Precio combo (menor que 55 + 12 = 67 individual)
-            category: 'Combo',
-            promotion: {
-                isActive: true,
-                discountType: 'PERCENTAGE',
-                discountValue: 10,
-                startsAt: new Date(),
-                endsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            }
-        });
+            // Auditoria
+            await OrderAudit.collection.insertMany([
+                { orderId: order1._id, actorId: waiterId, actorRole: 'WAITER', actorName: 'Mesero Test', action: 'ORDER_CREATED', details: { description: 'Orden creada.' }, branchId, companyId, performedAt: new Date() }
+            ]);
 
-        const allMenus = [...singleMenus, comboMenu];
+            // Reservaciones
+            await Reservation.create({
+                branch: branchId, table: tables[2]._id, date: new Date(Date.now() + 86400000), 
+                status: 'Pendiente', type: 'En Mesa', notes: 'Celebración de cumpleaños',
+                guestsCount: 4, guestName: 'Cliente Test'
+            });
 
-        // ═══════════════════════════════════════════════
-        // 7. STOCK (inventario por sucursal)
-        // ═══════════════════════════════════════════════
-        console.log('📦 Creando stock inicial...');
-        const stockEntries = [];
-        for (const branch of branches) {
-            for (const ing of ingredients) {
-                stockEntries.push({
-                    branchId: branch._id,
-                    ingredientId: ing._id,
-                    quantity: Math.floor(Math.random() * 80) + 20,
-                    minStock: 10
-                });
-            }
-        }
-        await Stock.insertMany(stockEntries);
+            // Factura
+            await Invoice.create({
+                invoiceNumber: `F-${prefix}-${Math.floor(Math.random()*1000)}`,
+                orderId: order1._id, branchId, companyId, billedBy: cashierId,
+                itemsSnapshot: [{ menuItemName: 'Combo x2', quantity: 2, priceAtTime: 50, subtotal: 100 }],
+                subtotal: order1.total, totalAmount: order1.total, status: 'DRAFT'
+            });
+        };
 
-        // ═══════════════════════════════════════════════
-        // 8. MESAS
-        // ═══════════════════════════════════════════════
-        console.log('🪑 Configurando mesas...');
-        const tables = await Table.insertMany([
-            { branch: centroBranch._id, companyId: company._id, number: 'T01', capacity: 2, location: 'Ventana' },
-            { branch: centroBranch._id, companyId: company._id, number: 'T02', capacity: 4, location: 'Sala Principal' },
-            { branch: centroBranch._id, companyId: company._id, number: 'T03', capacity: 4, location: 'Sala Principal' },
-            { branch: centroBranch._id, companyId: company._id, number: 'T04', capacity: 6, location: 'Terraza' },
-            { branch: zona10Branch._id, companyId: company._id, number: 'Z01', capacity: 2, location: 'Bar' },
-            { branch: zona10Branch._id, companyId: company._id, number: 'Z02', capacity: 4, location: 'Sala Principal' }
-        ]);
+        await setupBranchData(campero._id, Ids.Campero.Branch1, camperoIngredients, camperoMenuB1, 'C1', Ids.Campero.Users.Waiter1, Ids.Campero.Users.Cashier1);
+        await setupBranchData(campero._id, Ids.Campero.Branch2, camperoIngredients, camperoMenuB2, 'C2', Ids.Campero.Users.Waiter2, Ids.Campero.Users.Cashier2);
+        await setupBranchData(mcdo._id, Ids.McDo.Branch1, mcdoIngredients, mcdoMenuB1, 'M1', Ids.McDo.Users.Waiter1, Ids.McDo.Users.Cashier1);
+        await setupBranchData(mcdo._id, Ids.McDo.Branch2, mcdoIngredients, mcdoMenuB2, 'M2', Ids.McDo.Users.Waiter2, Ids.McDo.Users.Cashier2);
 
-        // ═══════════════════════════════════════════════
-        // 9. ÓRDENES + AUDITORÍA
-        // ═══════════════════════════════════════════════
-        console.log('📝 Generando órdenes de prueba...');
-        const waiter = employees.find(e => e.role === 'WAITER' && e.branchId.toString() === centroBranch._id.toString());
-
-        // Orden 1: pending (platillo single)
-        const order1 = await Order.create({
-            tables: [tables[0]._id], waiter: waiter._id, branch: centroBranch._id,
-            status: 'pending',
-            items: [
-                { menuItem: singleMenus[0]._id, quantity: 2, priceAtTime: 55.00, status: 'pending' }
-            ],
-            total: 110.00
-        });
-
-        // Orden 2: in-kitchen (incluye un COMBO)
-        const order2 = await Order.create({
-            tables: [tables[2]._id], waiter: waiter._id, branch: centroBranch._id,
-            status: 'in-kitchen',
-            items: [
-                { menuItem: comboMenu._id, quantity: 1, priceAtTime: 54.00, status: 'in-kitchen' },
-                { menuItem: singleMenus[3]._id, quantity: 2, priceAtTime: 15.00, status: 'ready' }
-            ],
-            total: 84.00
-        });
-
-        // Registros de auditoría para las órdenes
-        console.log('📋 Creando registros de auditoría...');
-        await OrderAudit.collection.insertMany([
-            {
-                orderId: order1._id,
-                actorId: waiter._id, actorRole: 'WAITER', actorName: `${waiter.name} ${waiter.surname}`,
-                action: 'ORDER_CREATED',
-                details: { description: `Orden creada con 1 ítem en mesa T01` },
-                branchId: centroBranch._id, companyId: company._id,
-                performedAt: new Date(Date.now() - 3600000)
-            },
-            {
-                orderId: order2._id,
-                actorId: waiter._id, actorRole: 'WAITER', actorName: `${waiter.name} ${waiter.surname}`,
-                action: 'ORDER_CREATED',
-                details: { description: `Orden creada con 2 ítems (incluye combo) en mesa T03` },
-                branchId: centroBranch._id, companyId: company._id,
-                performedAt: new Date(Date.now() - 1800000)
-            },
-            {
-                orderId: order2._id,
-                actorId: waiter._id, actorRole: 'WAITER', actorName: `${waiter.name} ${waiter.surname}`,
-                action: 'ORDER_STATUS_CHANGED',
-                details: { previousStatus: 'pending', newStatus: 'in-kitchen', description: 'Orden enviada a cocina' },
-                branchId: centroBranch._id, companyId: company._id,
-                performedAt: new Date(Date.now() - 900000)
-            }
-        ]);
-
-        // ═══════════════════════════════════════════════
-        // 10. RESERVACIONES
-        // ═══════════════════════════════════════════════
-        console.log('📅 Creando reservaciones...');
-        await Reservation.insertMany([
-            {
-                branch: centroBranch._id, table: tables[3]._id,
-                date: new Date(Date.now() + 86400000), status: 'pending',
-                type: 'En Mesa', notes: 'Cena de aniversario — 6 personas'
-            }
-        ]);
-
-        // ═══════════════════════════════════════════════
-        // 11. FACTURAS (DRAFT)
-        // ═══════════════════════════════════════════════
-        console.log('🧾 Generando facturas...');
-        const cashier = employees.find(e => e.role === 'CASHIER');
-        await Invoice.insertMany([
-            {
-                invoiceNumber: 'FACT-D-001',
-                orderId: order1._id,
-                branchId: centroBranch._id, companyId: company._id,
-                billedBy: cashier._id,
-                itemsSnapshot: [
-                    { menuItemName: 'Pollo en Pepián', quantity: 2, priceAtTime: 55.00, subtotal: 110.00 }
-                ],
-                subtotal: 110.00, totalAmount: 110.00, status: 'DRAFT'
-            }
-        ]);
-
-        // ═══════════════════════════════════════════════
-        // RESUMEN
-        // ═══════════════════════════════════════════════
         console.log('\n✅ ¡Mega-Seeder completado con éxito!');
-        console.log('📊 Resumen:');
-        console.log(`   🏢 1 Empresa: ${company.alias}`);
-        console.log(`   👤 ${employees.length + 1} Usuarios (1 COMPANY_ADMIN + ${employees.length} empleados)`);
-        console.log(`   📍 ${branches.length} Sucursales`);
-        console.log(`   🍅 ${ingredients.length} Ingredientes`);
-        console.log(`   🍕 ${allMenus.length} Platillos (${singleMenus.length} SINGLE + 1 COMBO)`);
-        console.log(`   📦 ${stockEntries.length} Entradas de Stock`);
-        console.log(`   🪑 ${tables.length} Mesas`);
-        console.log(`   📝 2 Órdenes (1 pending + 1 in-kitchen con COMBO)`);
-        console.log(`   📋 3 Registros de Auditoría`);
-        console.log(`   📅 1 Reservación`);
-        console.log(`   🧾 1 Factura (DRAFT)`);
+        console.log('Se generaron datos extensivos para Pollo Campero y Mc Donalds.');
         process.exit(0);
 
     } catch (error) {
