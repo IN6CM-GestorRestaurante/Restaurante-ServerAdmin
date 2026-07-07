@@ -12,6 +12,17 @@
       "dest": "index.js"
     }
   ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://gestor-restaurante-admin.vercel.app" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
+      ]
+    }
+  ],
   "env": {
     "NODE_ENV": "production",
     "PORT": "3001",
@@ -32,7 +43,7 @@
     "ACCESS_TOKEN_EXPIRES_MINUTES": "480",
     "JWT_ISSUER": "auth-service",
     "JWT_AUDIENCE": "restaurante-app",
-    "AUTH_SERVICE_URL": "http://restaurante-auth-service:8080",
+    "AUTH_SERVICE_URL": "https://gestor-restaurante-auth-csharp.onrender.com",
     "ADMIN_SERVICE_URL": "http://restaurante-server-admin:3001",
     "AUTH_NODE_URL": "http://restaurante-auth-node:3007/api/v1",
     "FRONTEND_URL": "http://localhost:5173",
