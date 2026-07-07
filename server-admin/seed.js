@@ -35,6 +35,9 @@ const Ids = {
             Chef2: new mongoose.Types.ObjectId('e00000000000000000000017'),
             Cashier2: new mongoose.Types.ObjectId('e00000000000000000000018'),
             Client1: new mongoose.Types.ObjectId('e00000000000000000000019'),
+            Client2: new mongoose.Types.ObjectId('e0000000000000000000001a'),
+            Client3: new mongoose.Types.ObjectId('e0000000000000000000001b'),
+            ClientGeneral: new mongoose.Types.ObjectId('e00000000000000000000030'),
         }
     },
     // Mc Donalds
@@ -53,6 +56,8 @@ const Ids = {
             Chef2: new mongoose.Types.ObjectId('e00000000000000000000027'),
             Cashier2: new mongoose.Types.ObjectId('e00000000000000000000028'),
             Client1: new mongoose.Types.ObjectId('e00000000000000000000029'),
+            Client2: new mongoose.Types.ObjectId('e0000000000000000000002a'),
+            Client3: new mongoose.Types.ObjectId('e0000000000000000000002b'),
         }
     }
 };
@@ -169,8 +174,11 @@ const seedDatabase = async () => {
             { _id: Ids.Campero.Users.Waiter2, name: 'Diana', surname: 'Morales', username: 'dmorales', email: 'waiter2@campero.com', phone: '55511117', role: 'WAITER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
             { _id: Ids.Campero.Users.Chef2, name: 'Pedro', surname: 'Gomez', username: 'pgomez', email: 'chef2@campero.com', phone: '55511118', role: 'CHEF', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
             { _id: Ids.Campero.Users.Cashier2, name: 'Maria', surname: 'Sosa', username: 'msosa', email: 'cashier2@campero.com', phone: '55511119', role: 'CASHIER', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
-            // CAMPERO - CLIENT
+            // CAMPERO - CLIENTES
             { _id: Ids.Campero.Users.Client1, name: 'Cliente', surname: 'Campero', username: 'ccampero', email: 'cliente@campero.com', phone: '55511120', role: 'CLIENT', status: true, companyId: campero._id },
+            { _id: Ids.Campero.Users.Client2, name: 'Fernando', surname: 'Alvarez', username: 'falvarez', email: 'cliente.vip@campero.com', phone: '55511121', role: 'CLIENT', status: true, companyId: campero._id, branchId: Ids.Campero.Branch1 },
+            { _id: Ids.Campero.Users.Client3, name: 'Gabriela', surname: 'Mendoza', username: 'gmendoza', email: 'cliente.frecuente@campero.com', phone: '55511122', role: 'CLIENT', status: true, companyId: campero._id, branchId: Ids.Campero.Branch2 },
+            { _id: Ids.Campero.Users.ClientGeneral, name: 'Martin', surname: 'Garces', username: 'mgarces', email: 'cliente@restaurante.local', phone: '55533333', role: 'CLIENT', status: true, companyId: campero._id },
             
             // MCDONALDS - ADMIN
             { _id: Ids.McDo.Users.Admin, name: 'Ronald', surname: 'Mac', username: 'rmac', email: 'admin@mcdonalds.com', phone: '55522221', role: 'COMPANY_ADMIN', status: true, companyId: mcdo._id },
@@ -184,8 +192,10 @@ const seedDatabase = async () => {
             { _id: Ids.McDo.Users.Waiter2, name: 'Laura', surname: 'Vargas', username: 'lvargas', email: 'waiter2@mcdonalds.com', phone: '55522227', role: 'WAITER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
             { _id: Ids.McDo.Users.Chef2, name: 'Julio', surname: 'Rios', username: 'jrios', email: 'chef2@mcdonalds.com', phone: '55522228', role: 'CHEF', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
             { _id: Ids.McDo.Users.Cashier2, name: 'Sara', surname: 'Vega', username: 'svega', email: 'cashier2@mcdonalds.com', phone: '55522229', role: 'CASHIER', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 },
-            // MCDONALDS - CLIENT
-            { _id: Ids.McDo.Users.Client1, name: 'Cliente', surname: 'McDo', username: 'cmcdo', email: 'cliente@mcdonalds.com', phone: '55522230', role: 'CLIENT', status: true, companyId: mcdo._id }
+            // MCDONALDS - CLIENTES
+            { _id: Ids.McDo.Users.Client1, name: 'Cliente', surname: 'McDo', username: 'cmcdo', email: 'cliente@mcdonalds.com', phone: '55522230', role: 'CLIENT', status: true, companyId: mcdo._id },
+            { _id: Ids.McDo.Users.Client2, name: 'Rodrigo', surname: 'Paz', username: 'rpaz', email: 'cliente.vip@mcdonalds.com', phone: '55522231', role: 'CLIENT', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch1 },
+            { _id: Ids.McDo.Users.Client3, name: 'Valeria', surname: 'Solano', username: 'vsolano', email: 'cliente.frecuente@mcdonalds.com', phone: '55522232', role: 'CLIENT', status: true, companyId: mcdo._id, branchId: Ids.McDo.Branch2 }
         ];
         const allUsers = await User.insertMany(usersToInsert);
 
