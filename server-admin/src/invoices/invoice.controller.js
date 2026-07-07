@@ -4,6 +4,10 @@ import CreditNote from "./creditNote.model.js";
 import Order from "../orders/order.model.js";
 import Table from "../tables/table.model.js";
 
+// IVA de Guatemala. Los precios de menú se manejan como precio final (impuesto incluido),
+// por lo que el subtotal se deriva del total en vez de sumarse a él.
+const IVA_RATE = 0.12;
+
 const checkReplicaSet = async () => {
     try {
         const client = mongoose.connection.client;
@@ -48,6 +52,10 @@ export const createDraftFromOrder = async (req, res, next) => {
             subtotal: item.priceAtTime * item.quantity
         }));
 
+        const totalAmount = order.total;
+        const subtotal = Math.round((totalAmount / (1 + IVA_RATE)) * 100) / 100;
+        const taxAmount = Math.round((totalAmount - subtotal) * 100) / 100;
+
         const invoice = new Invoice({
             invoiceNumber,
             orderId: order._id,
@@ -55,9 +63,10 @@ export const createDraftFromOrder = async (req, res, next) => {
             companyId: req.companyId,
             billedBy,
             itemsSnapshot,
-            subtotal: order.total,
-            taxAmount: 0, // Se puede calcular si taxRate > 0
-            totalAmount: order.total,
+            subtotal,
+            taxRate: IVA_RATE,
+            taxAmount,
+            totalAmount,
             status: 'DRAFT'
         });
 
