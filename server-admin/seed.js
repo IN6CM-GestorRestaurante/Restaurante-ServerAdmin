@@ -143,6 +143,7 @@ const seedDatabase = async () => {
                 address: 'Calzada Roosevelt, Zona 7, Guatemala City',
                 openingTime: '06:00', closingTime: '23:59',
                 category: 'Comida Rápida', averagePrice: 40,
+                photos: ['https://res.cloudinary.com/dueikakf8/image/upload/v1783463738/branches/branch/mc-donalds-roosevelt-74a990e1.webp'],
                 email: 'roosevelt@mcdonalds.com', phoneNumber: '+50255500020',
                 isActive: true, state: 'Operativa'
             },
@@ -152,6 +153,7 @@ const seedDatabase = async () => {
                 address: 'Paseo Cayalá, Zona 16, Guatemala City',
                 openingTime: '07:00', closingTime: '23:00',
                 category: 'Comida Rápida', averagePrice: 45,
+                photos: ['https://res.cloudinary.com/dueikakf8/image/upload/v1783463750/branches/branch/mc-donalds-cayala-cf1c8b0b.jpg'],
                 email: 'cayala@mcdonalds.com', phoneNumber: '+50255500021',
                 isActive: true, state: 'Operativa'
             }
