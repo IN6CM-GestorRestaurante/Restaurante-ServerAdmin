@@ -12,6 +12,7 @@ import mongoose from 'mongoose';
  * @param {import('express').Response} res 
  * @param {import('express').NextFunction} next 
  * @author SERV-DRV
+ * @description Controlador para el manejo de las sucursales/compañías (Tenants).
  */
 export const registerCompanyAndUser = async (req, res, next) => {
     let createdCompany = null;

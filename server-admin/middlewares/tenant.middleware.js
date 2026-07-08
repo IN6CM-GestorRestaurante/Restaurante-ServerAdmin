@@ -7,6 +7,8 @@
  * @param {import('express').Response} res 
  * @param {import('express').NextFunction} next 
  * @author SERV-DRV
+ * @description
+ * Middleware principal de Multi-Tenancy.
  */
 export const injectTenantContext = (req, res, next) => {
     const user = req.user;
