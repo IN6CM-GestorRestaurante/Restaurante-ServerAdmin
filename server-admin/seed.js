@@ -112,6 +112,7 @@ const seedDatabase = async () => {
                 address: '6a Avenida 10-20, Zona 1, Guatemala City',
                 openingTime: '06:00', closingTime: '22:00',
                 category: 'Comida Rápida', averagePrice: 45,
+                photos: ['https://res.cloudinary.com/dueikakf8/image/upload/v1783464025/branches/branch/pollo-campero-zona-1-e4addcfc.jpg'],
                 email: 'zona1@campero.com', phoneNumber: '+50255500010',
                 isActive: true, state: 'Operativa'
             },
@@ -121,6 +122,7 @@ const seedDatabase = async () => {
                 address: 'Parque Majadas, Zona 11, Guatemala City',
                 openingTime: '07:00', closingTime: '23:00',
                 category: 'Comida Rápida', averagePrice: 50,
+                photos: ['https://res.cloudinary.com/dueikakf8/image/upload/v1783464034/branches/branch/pollo-campero-majadas-dca8745d.jpg'],
                 email: 'majadas@campero.com', phoneNumber: '+50255500011',
                 isActive: true, state: 'Operativa'
             }
@@ -213,7 +215,8 @@ const seedDatabase = async () => {
             { companyId: campero._id, name: 'Pan', unit: 'unidad', costPrice: 2 },
             { companyId: campero._id, name: 'Frijoles', unit: 'kg', costPrice: 10 },
             { companyId: campero._id, name: 'Huevos', unit: 'docena', costPrice: 15 },
-            { companyId: campero._id, name: 'Sirope Gaseosa', unit: 'litro', costPrice: 30 }
+            { companyId: campero._id, name: 'Sirope Gaseosa', unit: 'litro', costPrice: 30 },
+            { companyId: campero._id, name: 'Base para Helado', unit: 'litro', costPrice: 15 }
         ]);
         const mcdoIngredients = await Ingredient.insertMany([
             { companyId: mcdo._id, name: 'Carne de Res', unit: 'kg', costPrice: 35 },
@@ -223,7 +226,10 @@ const seedDatabase = async () => {
             { companyId: mcdo._id, name: 'Lechuga', unit: 'kg', costPrice: 8 },
             { companyId: mcdo._id, name: 'Salsa Especial', unit: 'litro', costPrice: 20 },
             { companyId: mcdo._id, name: 'Huevos', unit: 'docena', costPrice: 15 },
-            { companyId: mcdo._id, name: 'Sirope Gaseosa', unit: 'litro', costPrice: 30 }
+            { companyId: mcdo._id, name: 'Sirope Gaseosa', unit: 'litro', costPrice: 30 },
+            { companyId: mcdo._id, name: 'Pan', unit: 'unidad', costPrice: 2 },
+            { companyId: mcdo._id, name: 'Base para Helado', unit: 'litro', costPrice: 15 },
+            { companyId: mcdo._id, name: 'Aceite', unit: 'litro', costPrice: 25 }
         ]);
 
         const getIngId = (ings, name) => ings.find(i => i.name === name)._id;
@@ -241,26 +247,51 @@ const seedDatabase = async () => {
                   name: isCampero ? 'Desayuno Tradicional' : 'McMuffin de Huevo',
                   image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464877/branches/menu/desayuno-super-t-pico-removebg-preview-41c7414e.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466762/branches/menu/mcmuffin-de-huevo-removebg-preview-09996824.png',
                   description: isCampero ? 'Huevos, frijoles y plátanos.' : 'Muffin inglés con huevo y queso.',
-                  recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Huevos'), quantityRequired: 2 }] },
+                  recipe: isCampero 
+                    ? [
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Huevos'), quantityRequired: 2 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Frijoles'), quantityRequired: 0.15 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Pan'), quantityRequired: 2 }
+                      ]
+                    : [
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Huevos'), quantityRequired: 1 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Pan'), quantityRequired: 1 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Queso Cheddar'), quantityRequired: 0.05 }
+                      ] },
                 // Almuerzo / Cena
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: isCampero ? 35 : 40,
                   name: isCampero ? '2 Piezas de Pollo' : 'Big Mac',
                   image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783465344/branches/menu/2-piezas-de-pollo-removebg-preview-7d42471b.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466751/branches/menu/big-mac-removebg-preview-9e53a8e6.png',
                   description: isCampero ? '2 piezas de pollo frito tradicional.' : 'Dos tortas de carne, salsa especial, queso.',
                   recipe: isCampero 
-                    ? [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Pollo Fresco'), quantityRequired: 0.5 }] 
-                    : [{ componentType: 'Ingredient', componentId: getIngId(ings, 'Carne de Res'), quantityRequired: 0.3 }] },
+                    ? [
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Pollo Fresco'), quantityRequired: 0.5 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Empanizado Secreto'), quantityRequired: 0.05 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Aceite'), quantityRequired: 0.1 }
+                      ] 
+                    : [
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Carne de Res'), quantityRequired: 0.3 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Pan de Hamburguesa'), quantityRequired: 1 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Queso Cheddar'), quantityRequired: 0.05 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Salsa Especial'), quantityRequired: 0.02 },
+                        { componentType: 'Ingredient', componentId: getIngId(ings, 'Lechuga'), quantityRequired: 0.05 }
+                      ] },
                 // Complementos / Postres
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Plato Fuerte', price: 15,
                   name: 'Papas Fritas',
                   image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464861/branches/menu/papas-fritas-removebg-preview-f1fa23e2.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466771/branches/menu/papas-fritas-ca047f05.png',
                   description: 'Porción de papas.',
-                  recipe: [{ componentType: 'Ingredient', componentId: getIngId(ings, isCampero ? 'Papas' : 'Papas Congeladas'), quantityRequired: 0.2 }] },
+                  recipe: [
+                      { componentType: 'Ingredient', componentId: getIngId(ings, isCampero ? 'Papas' : 'Papas Congeladas'), quantityRequired: 0.2 },
+                      { componentType: 'Ingredient', componentId: getIngId(ings, 'Aceite'), quantityRequired: 0.05 }
+                  ] },
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Postre', price: 12,
                   name: isCampero ? 'Helado Campero' : 'McFlurry',
                   image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783464352/branches/menu/helado-09ac73f7.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466780/branches/menu/mcflurry-removebg-preview-589278dc.png',
                   description: 'Helado cremoso.',
-                  recipe: [] }, // Sin receta para simplificar
+                  recipe: [
+                      { componentType: 'Ingredient', componentId: getIngId(ings, 'Base para Helado'), quantityRequired: 0.15 }
+                  ] },
                 // Bebidas
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'SINGLE', category: 'Bebida', price: 10,
                   name: 'Gaseosa Mediana',
@@ -275,19 +306,19 @@ const seedDatabase = async () => {
                   name: isCampero ? 'Menú Campero 2 Piezas' : 'Menú Big Mac',
                   image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783465324/branches/menu/men-campero-2-piezas-removebg-preview-646adc12.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466740/branches/menu/men-big-mac-removebg-preview-d3cc7184.png',
                   description: 'Combo completo con bebida y papas.',
-                  comboItems: [
-                      { menuItemId: singles[1]._id, quantity: 1 }, // Plato Fuerte
-                      { menuItemId: singles[2]._id, quantity: 1 }, // Papas
-                      { menuItemId: singles[4]._id, quantity: 1 }  // Bebida
+                  recipe: [
+                      { componentType: 'Menu', componentId: singles[1]._id, quantityRequired: 1 }, // Plato Fuerte
+                      { componentType: 'Menu', componentId: singles[2]._id, quantityRequired: 1 }, // Papas
+                      { componentType: 'Menu', componentId: singles[4]._id, quantityRequired: 1 }  // Bebida
                   ]
                 },
                 { sku: 'SKU-' + Math.floor(Math.random()*100000), branch: branchId, companyId, itemType: 'COMBO', category: 'Combo', price: 30,
                   name: isCampero ? 'Combo Desayuno Chapín' : 'Combo McMuffin',
                   image: isCampero ? 'https://res.cloudinary.com/dueikakf8/image/upload/v1783465236/branches/menu/desayuno-campero-removebg-preview-6fb534bc.png' : 'https://res.cloudinary.com/dueikakf8/image/upload/v1783466729/branches/menu/combo-mcmuffin-removebg-preview-7fc8cc93.png',
                   description: 'Empieza tu día con este desayuno en oferta.',
-                  comboItems: [
-                      { menuItemId: singles[0]._id, quantity: 1 },
-                      { menuItemId: singles[4]._id, quantity: 1 }
+                  recipe: [
+                      { componentType: 'Menu', componentId: singles[0]._id, quantityRequired: 1 },
+                      { componentType: 'Menu', componentId: singles[4]._id, quantityRequired: 1 }
                   ],
                   promotion: {
                       isActive: true, discountType: 'PERCENTAGE', discountValue: 20,
