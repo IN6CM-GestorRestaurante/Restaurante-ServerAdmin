@@ -80,6 +80,22 @@ const initServer = async (app) => {
             console.log(`Base URL: http://localhost:${PORT}${BASE_URL}`);
         });
 
+        // Ruta base de Bienvenida
+        app.get('/', (req, res)=> {
+            res.status(200).json({
+                success: true,
+                service: 'Restaurante ServerAdmin API',
+                version: '1.0.0',
+                status: 'online',
+                message: 'API en línea. Usa los endpoints documentados abajo.',
+                endpoints: {
+                    health: `${BASE_URL}/health`,
+                    docs: `${BASE_URL}/docs`
+                },
+                timestamp: new Date().toISOString()
+            });
+        });
+
         //Primera ruta
         app.get(`${BASE_URL}/health`, (req, res)=> {
             res.status(200).json(
