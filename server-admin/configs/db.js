@@ -40,6 +40,22 @@ export const dbConnection = async () => {
             serverSelectionTimeoutMS: 5000,
             maxPoolSize: 10,
         });
+
+        // ----------------------------------------------
+        //               SEEDER AUTOMÁTICO
+        // ----------------------------------------------
+        try {
+            const Company = (await import("../src/companies/company.model.js")).default;
+            const { seedDatabase } = await import("../seed.js");
+            
+            const companyCount = await Company.countDocuments();
+            if (companyCount === 0) {
+                console.log("MongoDB | Base de datos vacía detectada. Ejecutando seeder automático...");
+                await seedDatabase();
+            }
+        } catch (seedErr) {
+            console.error("MongoDB | Error durante el seeder automático:", seedErr);
+        }
     } catch (error) {
         console.log(`Error al conectar la db:  ${error}`);
         process.exit(1);

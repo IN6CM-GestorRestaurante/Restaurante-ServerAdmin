@@ -65,16 +65,18 @@ const Ids = {
 const seedDatabase = async () => {
     if (!SEED_ENABLED) {
         console.log('⏭️  Seeder desactivado (SEED_ENABLED=false)');
-        process.exit(0);
+        return;
     }
 
     try {
         console.log('🚀 Iniciando Mega-Seeder para Pollo Campero y Mc Donalds...');
-        await mongoose.connect(process.env.URI_MONGODB, {
-            serverSelectionTimeoutMS: 5000,
-            maxPoolSize: 10
-        });
-        console.log('🟢 Conectado a MongoDB');
+        if (mongoose.connection.readyState !== 1) {
+            await mongoose.connect(process.env.URI_MONGODB, {
+                serverSelectionTimeoutMS: 5000,
+                maxPoolSize: 10
+            });
+            console.log('🟢 Conectado a MongoDB en seeder');
+        }
 
         // LIMPIEZA
         console.log('🗑️  Limpiando base de datos...');
@@ -393,12 +395,17 @@ const seedDatabase = async () => {
 
         console.log('\n✅ ¡Mega-Seeder completado con éxito!');
         console.log('Se generaron datos extensivos para Pollo Campero y Mc Donalds.');
-        process.exit(0);
+        return;
 
     } catch (error) {
         console.error('❌ Error en el seeder:', error);
-        process.exit(1);
+        throw error;
     }
 };
 
-seedDatabase();
+// Permitir ejecución manual directa (ej: node seed.js)
+if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
+    seedDatabase().then(() => process.exit(0)).catch(() => process.exit(1));
+}
+
+export { seedDatabase };
