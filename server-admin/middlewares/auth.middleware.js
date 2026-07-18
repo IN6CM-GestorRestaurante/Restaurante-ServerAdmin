@@ -10,8 +10,9 @@ export const validateJWT = async (req, res, next) => {
             return res.status(401).json({ success: false, message: 'Falta token de acceso' });
         }
 
-        // El SECRETORPRIVATEKEY debe estar en el .env (es la misma llave que usa C#)
-        const decoded = jwt.verify(token, process.env.SECRETORPRIVATEKEY);
+        // Soporta tanto JWT_SECRET (convención moderna) como SECRETORPRIVATEKEY (heredado)
+        const secretKey = process.env.JWT_SECRET || process.env.SECRETORPRIVATEKEY;
+        const decoded = jwt.verify(token, secretKey);
         
         const email = decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
         const role = decoded.role || decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];

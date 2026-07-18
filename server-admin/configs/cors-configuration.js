@@ -1,6 +1,8 @@
 import cors from 'cors';
 
-const whiteList = ['http://localhost:5173', 'https://admin.restaurante.local', 'https://gestor-restaurante-admin.vercel.app'];
+const whiteList = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
 
 export const corsOptions = {
   origin: (origin, callback) => {
